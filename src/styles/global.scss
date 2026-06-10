@@ -1,0 +1,141 @@
+// ============================================
+// Global Styles
+// ============================================
+
+@use './globalColors' as *;
+@use './variables' as *;
+@use './mixins' as *;
+
+// Import Google Fonts
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Nunito+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+// ============================================
+// Base Styles
+// ============================================
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: $font-family-secondary;
+  font-size: $font-size-base;
+  font-weight: $font-weight-regular;
+  line-height: $line-height-normal;
+  color: $color-text-primary;
+  background-color: $color-bg-primary;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+// ============================================
+// Typography
+// ============================================
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-family-primary;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-tight;
+  margin: 0;
+}
+
+h1 { font-size: $font-size-3xl; }
+h2 { font-size: $font-size-2xl; }
+h3 { font-size: $font-size-xl; }
+h4 { font-size: $font-size-lg; }
+h5 { font-size: $font-size-md; }
+h6 { font-size: $font-size-base; }
+
+p {
+  margin: 0;
+  color: $color-text-secondary;
+}
+
+a {
+  color: $color-primary;
+  text-decoration: none;
+  transition: color $transition-fast;
+  
+  &:hover {
+    color: $color-primary-dark;
+  }
+}
+
+// ============================================
+// Form Elements
+// ============================================
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+// ============================================
+// Selection
+// ============================================
+
+::selection {
+  background-color: $color-primary-light;
+  color: $color-text-inverse;
+}
+
+// ============================================
+// Focus Styles
+// ============================================
+
+:focus-visible {
+  outline: 2px solid $color-primary;
+  outline-offset: 2px;
+}
+
+// ============================================
+// Scrollbar
+// ============================================
+
+body {
+  @include scrollbar-styled;
+}
+
+// ============================================
+// Utility Classes
+// ============================================
+
+.sr-only {
+  @include visually-hidden;
+}
+
+.container {
+  @include container;
+}
+
+// ============================================
+// Animation Classes
+// ============================================
+
+.fade-in {
+  @include fade-in;
+}
+
+.slide-up {
+  @include slide-up;
+}
+
+header[class*="header_"] div[class*="bottomBar_"] {
+    display: none !important;
+}

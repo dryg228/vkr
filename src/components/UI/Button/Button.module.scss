@@ -1,0 +1,171 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.button {
+  @include button-base;
+  position: relative;
+  overflow: hidden;
+  font-weight: $font-weight-bold;
+  text-transform: none;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+  
+  &:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+  
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+}
+
+// Variants
+.primary {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
+  color: $color-text-inverse;
+  box-shadow: 0 6px 20px rgba($color-primary, 0.4);
+  
+  &:hover:not(:disabled) {
+    box-shadow: 0 8px 28px rgba($color-primary, 0.5);
+    transform: translateY(-3px);
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(-1px);
+  }
+}
+
+.secondary {
+  background: $color-bg-secondary;
+  color: $color-primary;
+  border: 2px solid $color-primary;
+  
+  &:hover:not(:disabled) {
+    background: $color-primary;
+    color: $color-text-inverse;
+    transform: scale(1.05);
+  }
+}
+
+.ghost {
+  background: transparent;
+  color: $color-text-secondary;
+  
+  &:hover:not(:disabled) {
+    background: $color-bg-tertiary;
+    color: $color-text-primary;
+  }
+}
+
+.danger {
+  background: $color-error;
+  color: $color-text-inverse;
+  
+  &:hover:not(:disabled) {
+    background: darken($color-error, 10%);
+    box-shadow: $shadow-md;
+  }
+}
+
+.success {
+  background: $color-success;
+  color: $color-text-inverse;
+  
+  &:hover:not(:disabled) {
+    background: darken($color-success, 10%);
+    box-shadow: $shadow-md;
+  }
+}
+
+// Sizes
+.sm {
+  padding: 10px 20px;
+  font-size: $font-size-sm;
+  border-radius: $radius-xl;
+}
+
+.md {
+  padding: 12px 26px;
+  font-size: $font-size-base;
+  border-radius: $radius-xl;
+}
+
+.lg {
+  padding: 16px 32px;
+  font-size: $font-size-md;
+  border-radius: $radius-xl;
+}
+
+// States
+.fullWidth {
+  width: 100%;
+}
+
+.loading {
+  color: transparent !important;
+  pointer-events: none;
+}
+
+.iconOnly {
+  padding: $spacing-sm;
+  
+  &.sm {
+    padding: $spacing-xs;
+  }
+  
+  &.lg {
+    padding: $spacing-md;
+  }
+}
+
+// Elements
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  
+  svg {
+    width: 1.25em;
+    height: 1.25em;
+  }
+}
+
+.text {
+  @include text-ellipsis;
+  position: relative;
+  z-index: 1;
+}
+
+.spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1.25em;
+  height: 1.25em;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}

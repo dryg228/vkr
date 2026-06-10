@@ -1,0 +1,87 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.label {
+  font-family: $font-family-secondary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+}
+
+.inputContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  @include input-base;
+  height: 48px;
+  border-radius: $radius-lg;
+}
+
+.hasLeftIcon {
+  padding-left: 44px;
+}
+
+.hasRightIcon {
+  padding-right: 44px;
+}
+
+.leftIcon,
+.rightIcon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  color: $color-text-muted;
+  pointer-events: none;
+  
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.leftIcon {
+  left: 0;
+}
+
+.rightIcon {
+  right: 0;
+}
+
+.error {
+  font-size: $font-size-sm;
+  color: $color-error;
+}
+
+.hint {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+}
+
+.hasError {
+  .input {
+    border-color: $color-error;
+    
+    &:focus {
+      border-color: $color-error;
+      box-shadow: 0 0 0 3px rgba($color-error, 0.15);
+    }
+  }
+}

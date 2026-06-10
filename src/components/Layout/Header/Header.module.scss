@@ -1,0 +1,144 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: $header-height;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
+  color: $color-text-inverse;
+  z-index: $z-fixed;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.container {
+  @include flex-column;
+  height: 100%;
+}
+
+.topBar {
+  @include flex-between;
+  padding: $spacing-sm $spacing-xl;
+  flex: 1;
+  
+  @include mobile {
+    padding: $spacing-sm $spacing-md;
+  }
+}
+
+.bottomBar {
+  padding: $spacing-sm $spacing-xl;
+  background: rgba(0, 0, 0, 0.15);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  
+  @include mobile {
+    padding: $spacing-sm $spacing-md;
+  }
+}
+
+.left {
+  @include flex-start;
+  gap: $spacing-md;
+}
+
+.menuButton {
+  display: none;
+  padding: $spacing-sm;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: $color-text-inverse;
+  cursor: pointer;
+  border-radius: $radius-lg;
+  transition: all $transition-fast;
+  backdrop-filter: blur(10px);
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+  
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+  
+  @include mobile-tablet {
+    display: flex;
+  }
+}
+
+.logo {
+  @include flex-start;
+  gap: $spacing-sm;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.logoIcon {
+  width: 28px;
+  height: 28px;
+  color: $color-accent;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.logoText {
+  font-family: $font-family-primary;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  
+  @include mobile {
+    display: none;
+  }
+}
+
+.title {
+  font-family: $font-family-primary;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  
+  @include mobile {
+    font-size: $font-size-base;
+  }
+}
+
+.right {
+  @include flex-start;
+  gap: $spacing-md;
+}
+
+.userInfo {
+  @include flex-start;
+  gap: $spacing-md;
+}
+
+.role {
+  font-size: $font-size-sm;
+  color: $color-text-inverse;
+  padding: $spacing-xs $spacing-md;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: $radius-full;
+  backdrop-filter: blur(10px);
+  font-weight: $font-weight-medium;
+  
+  @include mobile {
+    display: none;
+  }
+}
+
+.headerButton {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: $color-text-inverse !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  backdrop-filter: blur(10px);
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+  }
+}

@@ -1,0 +1,110 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.wrapper {
+  width: 100%;
+  overflow-x: auto;
+  @include scrollbar-styled;
+  border-radius: $radius-xl;
+  border: none;
+  background: $color-bg-primary;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: $font-family-secondary;
+  font-size: $font-size-base;
+}
+
+.thead {
+  background: linear-gradient(135deg, rgba($color-primary, 0.1) 0%, rgba($color-primary, 0.05) 100%);
+  border-bottom: 2px solid $color-primary;
+}
+
+.th {
+  padding: $spacing-lg $spacing-md;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.tbody {
+  .tr {
+    border-bottom: 1px solid $color-border-light;
+    transition: all $transition-fast;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+.td {
+  padding: $spacing-lg $spacing-md;
+  color: $color-text-secondary;
+  vertical-align: middle;
+}
+
+// Striped
+.striped {
+  .tbody .tr:nth-child(even) {
+    background: $color-bg-secondary;
+  }
+}
+
+// Hoverable
+.hoverable {
+  .tbody .tr:hover {
+    background: rgba($color-primary, 0.05);
+    transform: scale(1.01);
+  }
+}
+
+// Compact
+.compact {
+  .th,
+  .td {
+    padding: $spacing-sm;
+    font-size: $font-size-sm;
+  }
+}
+
+// States
+.loading,
+.empty {
+  padding: $spacing-2xl;
+  text-align: center;
+  color: $color-text-muted;
+}
+
+.loading {
+  @include flex-center;
+  gap: $spacing-sm;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid $color-border-primary;
+  border-top-color: $color-primary;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@include mobile {
+  .th,
+  .td {
+    padding: $spacing-sm;
+    font-size: $font-size-sm;
+  }
+}

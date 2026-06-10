@@ -1,0 +1,13 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.page { @include flex-column; gap: $spacing-xl; }
+.header { @include flex-between; gap: $spacing-md; }
+.title { @include heading-1; margin: 0; }
+.tabs { display: flex; gap: $spacing-sm; border-bottom: 2px solid $color-border-light; padding-bottom: $spacing-sm; }
+.tab { padding: $spacing-sm $spacing-lg; background: none; border: none; border-radius: $radius-md $radius-md 0 0; font-size: $font-size-md; font-weight: $font-weight-medium; color: $color-text-muted; cursor: pointer; transition: all $transition-fast; &:hover { color: $color-text-primary; background: $color-bg-secondary; } &.active { color: $color-primary; background: $color-primary-lightest; border-bottom: 2px solid $color-primary; } }
+.actions { display: flex; justify-content: flex-end; }
+.tableCard { overflow: hidden; }
+.form { @include flex-column; gap: $spacing-md; }
+.formActions { display: flex; justify-content: flex-end; gap: $spacing-sm; margin-top: $spacing-md; }

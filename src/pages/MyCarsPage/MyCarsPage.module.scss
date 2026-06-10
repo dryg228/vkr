@@ -1,0 +1,99 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.page {
+    @include flex-column;
+    gap: $spacing-xl;
+}
+
+.header {
+    @include flex-between;
+    gap: $spacing-md;
+}
+
+.title {
+    @include heading-1;
+    margin: 0;
+}
+
+.empty {
+    @include flex-center;
+    padding: $spacing-3xl;
+    color: $color-text-muted;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: $spacing-lg;
+}
+
+.carCard {
+    @include flex-column;
+    gap: $spacing-sm;
+    padding: $spacing-lg !important;
+}
+
+.carHeader {
+    @include flex-between;
+    gap: $spacing-sm;
+
+    h3 {
+        margin: 0;
+        font-size: $font-size-lg;
+    }
+}
+
+.carDetails {
+    display: flex;
+    gap: $spacing-md;
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+}
+
+.location {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    margin: 0;
+}
+
+.carPrice {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    color: $color-accent;
+}
+
+.carActions {
+    display: flex;
+    gap: $spacing-sm;
+    margin-top: auto;
+}
+
+.form {
+    @include flex-column;
+    gap: $spacing-md;
+}
+
+.formActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-sm;
+    margin-top: $spacing-md;
+}
+
+
+.inputWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.errorText {
+    color: #ff4d4f;
+    font-size: 12px;
+    margin-top: -4px;
+    margin-bottom: 4px;
+    text-align: left;
+}

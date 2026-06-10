@@ -1,0 +1,74 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.label {
+  font-family: $font-family-secondary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+}
+
+.selectContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.select {
+  @include input-base;
+  height: 48px;
+  padding-right: 48px;
+  appearance: none;
+  cursor: pointer;
+  border-radius: $radius-lg;
+  
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: $color-text-muted;
+  
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.error {
+  font-size: $font-size-sm;
+  color: $color-error;
+}
+
+.hint {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+}
+
+.hasError {
+  .select {
+    border-color: $color-error;
+    
+    &:focus {
+      border-color: $color-error;
+      box-shadow: 0 0 0 3px rgba($color-error, 0.15);
+    }
+  }
+}

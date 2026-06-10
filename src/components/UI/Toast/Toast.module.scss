@@ -1,0 +1,111 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.container {
+  position: fixed;
+  top: $spacing-lg;
+  right: $spacing-lg;
+  z-index: $z-toast;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  max-width: 400px;
+  
+  @include mobile {
+    top: $spacing-md;
+    right: $spacing-md;
+    left: $spacing-md;
+    max-width: none;
+  }
+}
+
+.toast {
+  @include flex-start;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-lg;
+  background: $color-bg-primary;
+  border-radius: $radius-xl;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border: none;
+  animation: slideIn 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.success {
+  border-left-color: $color-success;
+  
+  .icon {
+    color: $color-success;
+  }
+}
+
+.error {
+  border-left-color: $color-error;
+  
+  .icon {
+    color: $color-error;
+  }
+}
+
+.warning {
+  border-left-color: $color-warning;
+  
+  .icon {
+    color: $color-warning;
+  }
+}
+
+.info {
+  border-left-color: $color-info;
+  
+  .icon {
+    color: $color-info;
+  }
+}
+
+.icon {
+  flex-shrink: 0;
+  
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.message {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.close {
+  flex-shrink: 0;
+  padding: $spacing-xs;
+  background: transparent;
+  border: none;
+  color: $color-text-muted;
+  cursor: pointer;
+  border-radius: $radius-sm;
+  transition: all $transition-fast;
+  
+  &:hover {
+    color: $color-text-primary;
+    background: $color-bg-tertiary;
+  }
+  
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

@@ -1,0 +1,42 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.layout {
+  min-height: 100vh;
+  background: $color-bg-secondary;
+}
+
+.main {
+  min-height: calc(100vh - #{$header-height});
+  margin-top: $header-height;
+  transition: margin-left $transition-smooth;
+  background: $color-bg-secondary;
+}
+
+.sidebarOpen {
+  margin-left: $sidebar-width;
+  
+  @include mobile-tablet {
+    margin-left: 0;
+  }
+}
+
+.sidebarCollapsed {
+  margin-left: $sidebar-collapsed-width;
+  
+  @include mobile-tablet {
+    margin-left: 0;
+  }
+}
+
+.content {
+  @include container;
+  padding-top: $spacing-lg;
+  padding-bottom: $spacing-2xl;
+  
+  @include mobile {
+    padding-top: $spacing-md;
+    padding-bottom: $spacing-xl;
+  }
+}

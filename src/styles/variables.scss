@@ -1,0 +1,104 @@
+// ============================================
+// Global Variables
+// ============================================
+
+@use './globalColors' as *;
+
+// Typography
+$font-family-primary: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+$font-family-secondary: 'Open Sans', 'Segoe UI', Arial, sans-serif;
+$font-family-mono: 'Source Code Pro', 'Courier New', monospace;
+
+$font-size-xs: 0.75rem;    // 12px
+$font-size-sm: 0.875rem;   // 14px
+$font-size-base: 1rem;     // 16px
+$font-size-md: 1.125rem;   // 18px
+$font-size-lg: 1.25rem;    // 20px
+$font-size-xl: 1.5rem;     // 24px
+$font-size-2xl: 1.875rem;  // 30px
+$font-size-3xl: 2.25rem;   // 36px
+$font-size-4xl: 3rem;      // 48px
+
+$font-weight-light: 300;
+$font-weight-regular: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+$line-height-tight: 1.25;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.75;
+
+// Spacing
+$spacing-xs: 0.25rem;   // 4px
+$spacing-sm: 0.5rem;    // 8px
+$spacing-md: 1rem;      // 16px
+$spacing-lg: 1.5rem;    // 24px
+$spacing-xl: 2rem;      // 32px
+$spacing-2xl: 3rem;     // 48px
+$spacing-3xl: 4rem;     // 64px
+
+// Border Radius
+$radius-sm: 2px;
+$radius-md: 4px;
+$radius-lg: 6px;
+$radius-xl: 8px;
+$radius-full: 9999px;
+
+// Breakpoints
+$breakpoint-xs: 480px;
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+$breakpoint-2xl: 1536px;
+
+// Container widths
+$container-sm: 640px;
+$container-md: 768px;
+$container-lg: 1024px;
+$container-xl: 1200px;
+
+// Z-index layers
+$z-dropdown: 100;
+$z-sticky: 200;
+$z-fixed: 300;
+$z-modal-backdrop: 400;
+$z-modal: 500;
+$z-popover: 600;
+$z-tooltip: 700;
+$z-toast: 800;
+
+// Transitions
+$transition-fast: 150ms ease;
+$transition-base: 250ms ease;
+$transition-slow: 350ms ease;
+$transition-smooth: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+
+// Shadows
+$shadow-sm: 0 1px 1px 0 $color-shadow;
+$shadow-md: 0 2px 6px -2px $color-shadow, 0 1px 2px -1px $color-shadow;
+$shadow-lg: 0 6px 10px -6px $color-shadow-medium, 0 2px 6px -4px $color-shadow;
+$shadow-xl: 0 10px 16px -10px $color-shadow-medium, 0 4px 8px -6px $color-shadow;
+$shadow-card: 0 2px 6px -4px $color-shadow-medium, 0 1px 2px -1px $color-shadow;
+$shadow-hover: 0 6px 16px -10px $color-shadow-medium;
+
+// Header & Sidebar
+$header-height: 64px;
+$sidebar-width: 260px;
+$sidebar-collapsed-width: 60px;
+
+// CSS Custom Properties Export
+:root {
+  --font-family-primary: #{$font-family-primary};
+  --font-family-secondary: #{$font-family-secondary};
+  --font-family-mono: #{$font-family-mono};
+  
+  --header-height: #{$header-height};
+  --sidebar-width: #{$sidebar-width};
+  --sidebar-collapsed-width: #{$sidebar-collapsed-width};
+  
+  --transition-fast: #{$transition-fast};
+  --transition-base: #{$transition-base};
+  --transition-slow: #{$transition-slow};
+}

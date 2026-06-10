@@ -1,0 +1,113 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.page {
+    @include flex-column;
+    gap: $spacing-xl;
+}
+
+.header {
+    @include flex-between;
+    gap: $spacing-md;
+
+    @include mobile {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+.title {
+    @include heading-1;
+    margin: 0;
+}
+
+.filters {
+    display: flex;
+    gap: $spacing-md;
+    flex-wrap: wrap;
+}
+
+.searchInput {
+    flex: 1;
+    min-width: 200px;
+}
+
+.loading,
+.empty {
+    @include flex-center;
+    padding: $spacing-3xl;
+    color: $color-text-muted;
+    font-size: $font-size-lg;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: $spacing-lg;
+}
+
+.carCard {
+    @include flex-column;
+    gap: $spacing-sm;
+    padding: $spacing-lg !important;
+}
+
+.carHeader {
+    @include flex-between;
+    gap: $spacing-sm;
+}
+
+.carName {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    margin: 0;
+}
+
+.carDetails {
+    display: flex;
+    gap: $spacing-md;
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+}
+
+.location {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    margin: 0;
+}
+
+.carPrice {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    color: $color-accent;
+    margin-top: auto;
+}
+
+.form {
+    @include flex-column;
+    gap: $spacing-md;
+}
+
+.formActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-sm;
+    margin-top: $spacing-md;
+}
+
+.inputWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.errorText {
+    color: #ff4d4f;
+    font-size: 12px;
+    margin-top: -4px;
+    margin-bottom: 4px;
+    text-align: left;
+}

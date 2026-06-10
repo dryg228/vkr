@@ -1,0 +1,223 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-2xl;
+}
+
+.welcome {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: $spacing-xl;
+  padding: $spacing-2xl $spacing-3xl;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
+  border-radius: $radius-xl;
+  color: $color-text-inverse;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba($color-primary, 0.3);
+
+  @include mobile {
+    flex-direction: column;
+    text-align: center;
+    padding: $spacing-xl;
+  }
+}
+
+.welcomeContent {
+  position: relative;
+  z-index: 1;
+  max-width: 600px;
+}
+
+.welcomeTitle {
+  font-family: $font-family-primary;
+  font-size: $font-size-4xl;
+  font-weight: $font-weight-bold;
+  margin: 0 0 $spacing-md;
+
+  @include mobile {
+    font-size: $font-size-2xl;
+  }
+}
+
+.welcomeText {
+  font-size: $font-size-lg;
+  opacity: 0.9;
+  margin: 0 0 $spacing-lg;
+  line-height: $line-height-relaxed;
+  color: $color-text-inverse;
+}
+
+.welcomeDecor {
+  position: absolute;
+  right: -60px;
+  bottom: -60px;
+  width: 300px;
+  height: 300px;
+  color: rgba(255, 255, 255, 0.1);
+  transform: rotate(-15deg);
+
+  @include mobile {
+    display: none;
+  }
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-lg;
+
+  @include tablet {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.page .statCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: $spacing-md;
+
+
+  padding: $spacing-lg $spacing-xl !important;
+  border-radius: $radius-xl !important;
+  background: linear-gradient(135deg, $color-bg-primary 0%, $color-bg-secondary 100%);
+  transition: all $transition-smooth;
+
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  }
+
+  &.primary .statIcon {
+    background: linear-gradient(135deg, $color-primary, $color-primary-dark);
+    color: $color-text-inverse;
+  }
+
+  &.success .statIcon {
+    background: linear-gradient(135deg, $color-success, darken($color-success, 10%));
+    color: $color-text-inverse;
+  }
+
+  &.warning .statIcon {
+    background: linear-gradient(135deg, $color-warning, darken($color-warning, 10%));
+    color: $color-text-inverse;
+  }
+
+  &.info .statIcon {
+    background: linear-gradient(135deg, $color-info, darken($color-info, 10%));
+    color: $color-text-inverse;
+  }
+}
+
+.statCard .statIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: $radius-lg;
+  margin-left: auto;
+  margin-right: auto;
+
+  svg {
+    width: 26px;
+    height: 26px;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.statContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.statValue {
+  font-family: $font-family-primary;
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+}
+
+.statTitle {
+  font-size: $font-size-sm;
+  color: $color-text-muted;
+}
+
+.sectionTitle {
+  font-family: $font-family-primary;
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  margin: 0 0 $spacing-lg;
+  background: linear-gradient(135deg, $color-primary, $color-primary-dark);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.actionCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: $spacing-xl;
+}
+
+.actionCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: $spacing-sm;
+  padding: $spacing-xl !important;
+  border-radius: $radius-xl !important;
+  transition: all $transition-smooth;
+
+  &:hover {
+    transform: scale(1.02);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+  }
+
+  h3 {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    margin: 0;
+  }
+
+  p {
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    margin: 0;
+  }
+}
+
+.actionIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, rgba($color-primary, 0.1), rgba($color-primary, 0.05));
+  border-radius: $radius-xl;
+  color: $color-primary;
+  margin-bottom: $spacing-sm;
+
+  svg {
+    width: 28px;
+    height: 28px;
+  }
+}
