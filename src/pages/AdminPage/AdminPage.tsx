@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { dataStore, navigationStore } from '@/store';
-import { Card, Button, Input, Modal, Table } from '@/components/UI';
+import { Card, Button, Input, Modal, Table, Select } from '@/components/UI';
 import { Location, LocationFormData, Car, Rental } from '@/types';
 import styles from './AdminPage.module.scss';
 
@@ -9,7 +9,18 @@ type AdminTab = 'cars' | 'locations' | 'rentals';
 
 export const AdminPage = observer(() => {
   const { currentPage } = navigationStore;
-  const { cars, rentals, activeLocations, createLocation, updateLocation, deleteLocation, deleteCar, deleteRental, getLocationById } = dataStore;
+  const { 
+    cars, 
+    rentals, 
+    activeLocations, 
+    createLocation, 
+    updateLocation, 
+    deleteLocation, 
+    deleteCar, 
+    deleteRental, 
+    getLocationById,
+    updateRentalStatus  
+  } = dataStore;
   
   const getInitialTab = (): AdminTab => {
     if (currentPage === 'admin-cars') return 'cars';
@@ -23,8 +34,6 @@ export const AdminPage = observer(() => {
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
   
   const [formData, setFormData] = useState<LocationFormData & { description?: string }>({ name: '', address: '', city: '', description: '' });
-  
-  // Состояние для хранения ошибок валидации полей локации
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleOpenModal = (location?: Location) => {
@@ -40,25 +49,17 @@ export const AdminPage = observer(() => {
       setEditingLocation(null); 
       setFormData({ name: '', address: '', city: '', description: '' }); 
     }
-    setErrors({}); // Сбрасываем ошибки при открытии модального окна
+    setErrors({}); 
     setIsModalOpen(true);
   };
 
   const handleSubmit = async () => { 
     const newErrors: Record<string, string> = {};
 
-    // Проверка заполнения полей
-    if (!formData.name.trim()) {
-      newErrors.name = 'Укажите название локации.';
-    }
-    if (!formData.city.trim()) {
-      newErrors.city = 'Укажите город.';
-    }
-    if (!formData.address.trim()) {
-      newErrors.address = 'Укажите адрес локации.';
-    }
+    if (!formData.name.trim()) newErrors.name = 'Укажите название локации.';
+    if (!formData.city.trim()) newErrors.city = 'Укажите город.';
+    if (!formData.address.trim()) newErrors.address = 'Укажите адрес локации.';
 
-    // Если есть ошибки — фиксируем их под инпутами и прерываем отправку
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -74,6 +75,28 @@ export const AdminPage = observer(() => {
   const handleDeleteCar = async (id: string) => { if (confirm('Удалить автомобиль?')) await deleteCar(id); };
   const handleDeleteRental = async (id: string) => { if (confirm('Удалить заявку на аренду?')) await deleteRental(id); };
 
+  const handleRentalStatusChange = async (id: string, status: any) => {
+    try {
+      await updateRentalStatus(id, status);
+    } catch (e) {
+      console.error('Ошибка изменения статуса аренды:', e);
+    }
+  };
+
+  const handleLocationToggleActive = async (id: string, currentActive: boolean) => {
+    try {
+      await updateLocation(id, { isActive: !currentActive } as any);
+    } catch (e) {
+      console.error('Ошибка изменения активности локации:', e);
+    }
+  };
+
+  const rentalStatusOptions = [
+    { value: 'pending', label: 'Ожидает' },
+    { value: 'confirmed', label: 'Подтверждена' },
+    { value: 'completed', label: 'Завершена' }
+  ];
+
   const carColumns = [
     { key: 'brand', title: 'Марка' },
     { key: 'model', title: 'Модель' },
@@ -81,7 +104,7 @@ export const AdminPage = observer(() => {
     { key: 'licensePlate', title: 'Госномер' },
     { key: 'pricePerDay', title: 'Цена/день', render: (c: Car) => `${c.pricePerDay} ₽` },
     { key: 'locationId', title: 'Локация', render: (c: Car) => getLocationById(c.locationId)?.name || '-' },
-    { key: 'status', title: 'Статус' },
+    { key: 'status', title: 'Статус' }, // Статус автомобиля снова возвращен в виде обычного текстового поля
     { key: 'actions', title: '', render: (c: Car) => <Button size="sm" variant="danger" onClick={() => handleDeleteCar(c.id)}>Удалить</Button> }
   ];
 
@@ -89,7 +112,19 @@ export const AdminPage = observer(() => {
     { key: 'name', title: 'Название' },
     { key: 'city', title: 'Город' },
     { key: 'address', title: 'Адрес' },
-    { key: 'isActive', title: 'Активна', render: (l: Location) => l.isActive ? 'Да' : 'Нет' },
+    { 
+      key: 'isActive', 
+      title: 'Активна', 
+      render: (l: Location) => (
+        <Button 
+          size="sm" 
+          variant={l.isActive ? 'success' : 'secondary'} 
+          onClick={() => handleLocationToggleActive(l.id, l.isActive)}
+        >
+          {l.isActive ? 'Да (Активна)' : 'Нет (Выкл)'}
+        </Button>
+      ) 
+    },
     { key: 'actions', title: '', render: (l: Location) => (
       <div style={{ display: 'flex', gap: '8px' }}>
         <Button size="sm" variant="secondary" onClick={() => handleOpenModal(l)}>Редактировать</Button>
@@ -98,15 +133,44 @@ export const AdminPage = observer(() => {
     )}
   ];
 
-  const rentalColumns = [
+    const rentalColumns = [
     { key: 'carName', title: 'Авто' },
     { key: 'renterName', title: 'Арендатор' },
     { key: 'startDate', title: 'Начало', render: (r: Rental) => new Date(r.startDate).toLocaleDateString('ru-RU') },
     { key: 'endDate', title: 'Конец', render: (r: Rental) => new Date(r.endDate).toLocaleDateString('ru-RU') },
     { key: 'totalPrice', title: 'Сумма', render: (r: Rental) => `${r.totalPrice} ₽` },
-    { key: 'status', title: 'Статус' },
+    { 
+      key: 'status', 
+      title: 'Статус', 
+      render: (r: Rental) => {
+        // Если статус подтвержден или завершен — блокируем изменение и выводим обычный текст
+        if (r.status === 'confirmed' || r.status === 'completed') {
+          const currentOption = rentalStatusOptions.find(opt => opt.value === r.status);
+          return (
+            <span style={{ 
+              fontWeight: 600, 
+              color: r.status === 'confirmed' ? '#16a34a' : '#475569', // Зеленый для подтвержденных, серый для завершенных
+              padding: '4px 8px'
+            }}>
+              {currentOption ? currentOption.label : r.status}
+            </span>
+          );
+        }
+
+        // Если статус "Ожидает" (pending), админ все еще может выбрать другой статус
+        return (
+          <Select 
+            options={rentalStatusOptions} 
+            value={r.status} 
+            onChange={(e: any) => handleRentalStatusChange(r.id, e.target?.value ?? e)} 
+            style={{ width: '170px', padding: '4px' }}
+          />
+        );
+      } 
+    },
     { key: 'actions', title: '', render: (r: Rental) => <Button size="sm" variant="danger" onClick={() => handleDeleteRental(r.id)}>Удалить</Button> }
   ];
+
 
   const activeCarsForTable = cars.filter(c => c.isActive);
 

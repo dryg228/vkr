@@ -7,7 +7,7 @@ import styles from './CarsPage.module.scss';
 
 export const CarsPage = observer(() => {
   const { filteredCars, activeLocations, carsLoading, setFilter, getLocationById } = dataStore;
-  const { isAuthenticated } = authStore;
+  const { isAuthenticated, currentRole } = authStore; 
   const [searchValue, setSearchValue] = useState('');
 
   // Эффект задержки (Debounce) для поисковой строки
@@ -31,8 +31,13 @@ export const CarsPage = observer(() => {
     { value: 'all', label: 'Все локации' }, ...activeLocations.map(l => ({ value: l.id, label: l.name }))
   ];
 
-const displayCars = filteredCars.filter(car => (car.isActive ?? true) && car.status === 'available');
-
+  // Фильтрация: Показываем только активные, доступные автомобили, 
+  // у которых ownerId НЕ совпадает с идентификатором текущего пользователя
+  const displayCars = filteredCars.filter(car => {
+    const isAvailable = (car.isActive ?? true) && car.status === 'available';
+    const isNotMine = (car as any).ownerId !== (currentRole || '');
+    return isAvailable && isNotMine;
+  });
 
   if (carsLoading) {
     return <div className={styles.loading}>Загрузка каталога...</div>;
@@ -46,9 +51,9 @@ const displayCars = filteredCars.filter(car => (car.isActive ?? true) && car.sta
 
       <div className={styles.filters}>
         <Input placeholder="Поиск по марке/модели..." value={searchValue} onChange={(e) => setSearchValue(e.target.value)} className={styles.searchInput} />
-        <Select options={locationOptions} value={dataStore.filters.locationId || 'all'} onChange={(e) => setFilter('locationId', e.target.value === 'all' ? undefined : e.target.value)} />
-        <Select options={fuelOptions} value={dataStore.filters.fuelType || 'all'} onChange={(e) => setFilter('fuelType', e.target.value === 'all' ? undefined : e.target.value)} />
-        <Select options={transmissionOptions} value={dataStore.filters.transmission || 'all'} onChange={(e) => setFilter('transmission', e.target.value === 'all' ? undefined : e.target.value)} />
+        <Select options={locationOptions} value={dataStore.filters.locationId || 'all'} onChange={(e: any) => setFilter('locationId', e.target?.value === 'all' ? undefined : (e.target?.value ?? e))} />
+        <Select options={fuelOptions} value={dataStore.filters.fuelType || 'all'} onChange={(e: any) => setFilter('fuelType', e.target?.value === 'all' ? undefined : (e.target?.value ?? e))} />
+        <Select options={transmissionOptions} value={dataStore.filters.transmission || 'all'} onChange={(e: any) => setFilter('transmission', e.target?.value === 'all' ? undefined : (e.target?.value ?? e))} />
       </div>
 
       {displayCars.length === 0 ? (
@@ -68,10 +73,15 @@ const displayCars = filteredCars.filter(car => (car.isActive ?? true) && car.sta
                 <span>{car.transmission === 'manual' ? 'Механика' : 'Автомат'}</span>
                 <span>{car.seats} мест</span>
               </div>
-              <p className={styles.location}>{getLocationById(car.locationId)?.name || 'Не указано'}</p>
+              <p className={styles.location}><strong>Локация:</strong> {getLocationById(car.locationId)?.name || 'Не указано'}</p>
+              
+              {/* Строка с выводом владельца автомобиля */}
+              <p className={styles.owner} style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 12px 0' }}>
+                <strong>Владелец:</strong> {(car as any).ownerName || (car as any).ownerId || 'Администратор'}
+              </p>
+
               <div className={styles.carPrice}>{car.pricePerDay} ₽/день</div>
 
-              {/* Кнопка с умной проверкой авторизации */}
               <div className={styles.carActions} style={{ marginTop: '16px' }}>
                 <Button 
                   variant="primary" 
@@ -85,7 +95,7 @@ const displayCars = filteredCars.filter(car => (car.isActive ?? true) && car.sta
                     }
                   }}
                 >
-                  Аrenдовать
+                  Арендовать
                 </Button>
               </div>
             </Card>
@@ -95,3 +105,5 @@ const displayCars = filteredCars.filter(car => (car.isActive ?? true) && car.sta
     </div>
   );
 });
+
+export default CarsPage;

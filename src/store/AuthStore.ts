@@ -1,6 +1,13 @@
 import { makeAutoObservable, runInAction } from 'mobx';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  updateProfile 
+} from 'firebase/auth';
 import { auth } from '@/firebase';
+import FirebaseService from '../firebase';
 import { User, UserRole, ROLE_PERMISSIONS, RolePermissions } from '@/types';
 
 export class AuthStore {
@@ -35,38 +42,77 @@ export class AuthStore {
     return roleHierarchy[this._user.role] >= roleHierarchy[requiredRole];
   };
 
-    private initAuthListener = (): void => {
-    onAuthStateChanged(auth, (firebaseUser) => {
-      runInAction(() => {
-        if (firebaseUser) {
-          const role: UserRole = firebaseUser.email?.startsWith('admin') ? 'admin' : 'owner';
+  private initAuthListener = (): void => {
+    onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          // Получаем сохраненные данные пользователя из базы данных
+          const savedData = await FirebaseService.getData<any>(`users/${firebaseUser.uid}`);
           
-          // Извлекаем имя из почты (все символы до знака '@'), если displayName не задан
-          const fallbackName = firebaseUser.email ? firebaseUser.email.split('@')[0] : 'Пользователь';
-          const name = firebaseUser.displayName || fallbackName;
+          runInAction(() => {
+            // СТРОГАЯ ПРОВЕРКА: Роль 'admin' присваивается ТОЛЬКО для admin@gmail.com
+            const role: UserRole = firebaseUser.email === 'admin@gmail.com' ? 'admin' : 'owner';
+            
+            const fallbackName = firebaseUser.email ? firebaseUser.email.split('@')[0] : 'Пользователь';
+            const name = savedData?.name || firebaseUser.displayName || fallbackName;
 
-          // Сохраняем все данные в состояние стора
-          this._user = {
-            role,
-            email: firebaseUser.email || '',
-            name: name
-          } as any; // Приведение к any временно защитит от строгих ограничений типов
-        } else {
-          this._user = { role: 'guest' };
+            this._user = {
+              role: savedData?.role || role,
+              email: firebaseUser.email || '',
+              name: name
+            } as any; 
+          });
+        } catch (error) {
+          console.error('Ошибка профиля:', error);
+          runInAction(() => {
+            // Дублируем строгую проверку в блок catch на случай сбоя БД
+            this._user = {
+              role: firebaseUser.email === 'admin@gmail.com' ? 'admin' : 'owner',
+              email: firebaseUser.email || '',
+              name: firebaseUser.displayName || 'Пользователь'
+            } as any;
+          });
         }
-      });
+      } else {
+        runInAction(() => {
+          this._user = { role: 'guest' };
+        });
+      }
     });
   };
-
 
   openLoginModal = (): void => { this.loginModalOpen = true; this.loginError = null; };
   closeLoginModal = (): void => { this.loginModalOpen = false; this.loginError = null; this.isLoading = false; };
 
-  register = async (email: string, password: string): Promise<boolean> => {
+  register = async (email: string, password: string, name: string): Promise<boolean> => {
     this.isLoading = true;
     this.loginError = null;
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      // 1. Создаем аккаунт в Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
+
+      if (firebaseUser) {
+        // Записываем введенное имя в стандартный профиль Firebase Auth
+        await updateProfile(firebaseUser, {
+          displayName: name.trim()
+        });
+
+        // СТРОГАЯ ПРОВЕРКА: При записи нового пользователя в БД админом станет только admin@gmail.com
+        const role: UserRole = email.trim() === 'admin@gmail.com' ? 'admin' : 'owner';
+
+        const userData = {
+          uid: firebaseUser.uid,
+          email: email,
+          name: name.trim(),
+          role: role,
+          createdAt: new Date().toISOString()
+        };
+
+        // 2. Сохраняем имя и роль в базу данных Realtime Database
+        await FirebaseService.setData(`users/${firebaseUser.uid}`, userData);
+      }
+
       this.closeLoginModal();
       return true;
     } catch (error: any) {

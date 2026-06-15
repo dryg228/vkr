@@ -174,4 +174,5 @@ export const RentalsPage = observer(() => {
   );
 });
 
+
 export default RentalsPage;
