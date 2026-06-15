@@ -1,13 +1,176 @@
-@use '@/styles/globalColors' as *;
-@use '@/styles/variables' as *;
-@use '@/styles/mixins' as *;
+.page {
+  padding: 40px 24px;
+  max-width: 1440px;
+  margin: 0 auto;
+  font-family: 'Inter', sans-serif;
+  background: #f8fafc;
+  min-height: 100vh;
 
-.page { @include flex-column; gap: $spacing-xl; }
-.header { @include flex-between; gap: $spacing-md; }
-.title { @include heading-1; margin: 0; }
-.tabs { display: flex; gap: $spacing-sm; border-bottom: 2px solid $color-border-light; padding-bottom: $spacing-sm; }
-.tab { padding: $spacing-sm $spacing-lg; background: none; border: none; border-radius: $radius-md $radius-md 0 0; font-size: $font-size-md; font-weight: $font-weight-medium; color: $color-text-muted; cursor: pointer; transition: all $transition-fast; &:hover { color: $color-text-primary; background: $color-bg-secondary; } &.active { color: $color-primary; background: $color-primary-lightest; border-bottom: 2px solid $color-primary; } }
-.actions { display: flex; justify-content: flex-end; }
-.tableCard { overflow: hidden; }
-.form { @include flex-column; gap: $spacing-md; }
-.formActions { display: flex; justify-content: flex-end; gap: $spacing-sm; margin-top: $spacing-md; }
+  @media (max-width: 768px) {
+    padding: 24px 16px;
+  }
+}
+
+.header {
+  margin-bottom: 32px;
+
+  .title {
+    font-size: 34px;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: -0.75px;
+
+    @media (max-width: 768px) {
+      font-size: 26px;
+    }
+  }
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 32px;
+  background: #e2e8f0;
+  padding: 6px;
+  border-radius: 14px;
+  width: fit-content;
+  overflow-x: auto;
+  max-width: 100%;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  @media (max-width: 576px) {
+    width: 100%;
+  }
+
+  .tab {
+    background: transparent;
+    border: none;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.23s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-block;
+
+    &:hover {
+      color: #0f172a;
+    }
+
+    &.active {
+      background: #ffffff;
+      color: #2563eb;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    }
+  }
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+  
+  @media (max-width: 576px) {
+    button, :global(.ui-button) {
+      width: 100%;
+    }
+  }
+  
+  button, :global(.ui-button) {
+    height: 46px;
+    padding: 0 24px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+}
+
+.tableCard {
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.03);
+  overflow-x: auto;
+  padding: 8px;
+  -webkit-overflow-scrolling: touch;
+
+  @media (max-width: 768px) {
+    border-radius: 16px;
+    padding: 4px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+    
+    th {
+      background: #f8fafc;
+      color: #64748b;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 16px 24px;
+      text-align: left;
+
+      @media (max-width: 768px) {
+        padding: 12px 16px;
+        font-size: 13px;
+      }
+    }
+
+    td {
+      padding: 18px 24px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+      font-size: 15px;
+      font-weight: 500;
+
+      @media (max-width: 768px) {
+        padding: 14px 16px;
+        font-size: 14px;
+      }
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+  }
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  .inputWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .errorText {
+    color: #f43f5e;
+    font-size: 12px;
+    font-weight: 500;
+  }
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+
+  @media (max-width: 480px) {
+    flex-direction: column-reverse;
+    
+    button, :global(.ui-button) {
+      width: 100%;
+    }
+  }
+}

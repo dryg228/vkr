@@ -10,7 +10,8 @@ export type PageId =
   | 'admin'
   | 'admin-cars'
   | 'admin-locations'
-  | 'admin-rentals';
+  | 'admin-rentals'
+  | 'profile';
 
 export interface PageConfig {
   id: PageId;
@@ -27,28 +28,28 @@ export const PAGES_CONFIG: Record<PageId, PageConfig> = {
     id: 'home',
     title: 'Главная',
     icon: 'home',
-    requiresAuth: false,
+    requiresAuth: false, // Доступно гостям
     showInNav: true,
   },
   cars: {
     id: 'cars',
     title: 'Каталог авто',
     icon: 'car',
-    requiresAuth: false,
+    requiresAuth: false, // Доступно гостям
     showInNav: true,
   },
   rentals: {
     id: 'rentals',
     title: 'Аренды',
     icon: 'calendar',
-    requiresAuth: false,
+    requiresAuth: true, // Скрыто от гостей, у кого нет аккаунта
     showInNav: true,
   },
   'my-cars': {
     id: 'my-cars',
     title: 'Мои машины',
     icon: 'key',
-    requiresAuth: true,
+    requiresAuth: true, // Скрыто от гостей
     requiredRole: 'owner',
     showInNav: true,
   },
@@ -56,7 +57,7 @@ export const PAGES_CONFIG: Record<PageId, PageConfig> = {
     id: 'admin',
     title: 'Администрирование',
     icon: 'settings',
-    requiresAuth: true,
+    requiresAuth: true, // Скрыто от гостей
     requiredRole: 'admin',
     showInNav: true,
   },
@@ -86,5 +87,12 @@ export const PAGES_CONFIG: Record<PageId, PageConfig> = {
     requiredRole: 'admin',
     showInNav: false,
     parentId: 'admin',
+  },
+  profile: {
+    id: 'profile',
+    title: 'Личный кабинет',
+    icon: 'user',
+    requiresAuth: true, // Скрыто от гостей
+    showInNav: true,
   },
 };

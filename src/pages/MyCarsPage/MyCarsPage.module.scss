@@ -1,99 +1,279 @@
-@use '@/styles/globalColors' as *;
-@use '@/styles/variables' as *;
-@use '@/styles/mixins' as *;
-
 .page {
-    @include flex-column;
-    gap: $spacing-xl;
+  padding: 40px 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+  font-family: 'Inter', sans-serif;
+  background: #f8fafc;
+  min-height: 100vh;
+
+  @media (max-width: 768px) {
+    padding: 24px 16px;
+  }
 }
 
 .header {
-    @include flex-between;
-    gap: $spacing-md;
-}
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  gap: 16px;
 
-.title {
-    @include heading-1;
-    margin: 0;
-}
+  @media (max-width: 576px) {
+    flex-direction: column;
+    align-items: flex-start;
+    
+    button, :global(.ui-button) {
+      width: 100%;
+    }
+  }
 
-.empty {
-    @include flex-center;
-    padding: $spacing-3xl;
-    color: $color-text-muted;
+  .title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.5px;
+
+    @media (max-width: 768px) {
+      font-size: 26px;
+    }
+  }
 }
 
 .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: $spacing-lg;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 32px;
+
+  @media (max-width: 768px) {
+    gap: 20px;
+  }
+  
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .carCard {
-    @include flex-column;
-    gap: $spacing-sm;
-    padding: $spacing-lg !important;
-}
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 24px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
 
-.carHeader {
-    @include flex-between;
-    gap: $spacing-sm;
+  @media (max-width: 768px) {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  &:hover {
+    @media (min-width: 769px) {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+      border-color: #e2e8f0;
+    }
+  }
+
+  .carHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    gap: 12px;
 
     h3 {
-        margin: 0;
-        font-size: $font-size-lg;
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0;
+
+      @media (max-width: 768px) {
+        font-size: 19px;
+      }
     }
-}
+  }
 
-.carDetails {
+  .carDetails {
     display: flex;
-    gap: $spacing-md;
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-}
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
 
-.location {
-    font-size: $font-size-sm;
-    color: $color-text-secondary;
-    margin: 0;
-}
+    span {
+      background: #f1f5f9;
+      color: #475569;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+  }
 
-.carPrice {
-    font-size: $font-size-xl;
-    font-weight: $font-weight-bold;
-    color: $color-accent;
+  .location {
+    font-size: 14px;
+    color: #94a3b8;
+    margin-top: auto;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    
+    &::before {
+      content: "📍";
+      font-size: 12px;
+    }
+  }
+
+  .carPrice {
+    font-size: 24px;
+    font-weight: 800;
+    color: #2563eb;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 16px;
+
+    @media (max-width: 768px) {
+      font-size: 21px;
+    }
+  }
 }
 
 .carActions {
-    display: flex;
-    gap: $spacing-sm;
-    margin-top: auto;
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 20px;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  button, :global(.ui-button) {
+    flex: 1;
+    height: 42px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    width: 100%;
+  }
 }
 
 .form {
-    @include flex-column;
-    gap: $spacing-md;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 8px 4px;
+
+  .inputWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .errorText {
+    color: #f43f5e;
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 2px;
+    animation: fadeIn 0.2s ease;
+  }
 }
 
 .formActions {
-    display: flex;
-    justify-content: flex-end;
-    gap: $spacing-sm;
-    margin-top: $spacing-md;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+  
+  @media (max-width: 480px) {
+    flex-direction: column-reverse;
+    
+    button, :global(.ui-button) {
+      width: 100%;
+    }
+  }
+
+  button, :global(.ui-button) {
+    min-width: 120px;
+    height: 46px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
 }
 
-
-.inputWrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    width: 100%;
+.loading, .empty {
+  text-align: center;
+  padding: 80px 0;
+  font-size: 18px;
+  color: #64748b;
+  font-weight: 500;
 }
 
-.errorText {
-    color: #ff4d4f;
-    font-size: 12px;
-    margin-top: -4px;
-    margin-bottom: 4px;
-    text-align: left;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.page {
+  padding: 40px 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+  font-family: 'Inter', sans-serif;
+  background: #f8fafc;
+  
+  // Растягивает страницу на всю высоту экрана за вычетом средних отступов
+  min-height: calc(100vh - 120px); 
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding: 24px 16px;
+    min-height: calc(100vh - 80px);
+  }
+}
+
+.page {
+  padding: 40px 24px;
+  max-width: 100%; // Позволяет контенту занять всю ширину
+  width: 100%;
+  margin: 0 auto;
+  font-family: 'Inter', sans-serif;
+  background: #f8fafc;
+  
+  // Растягиваем на всю высоту экрана
+  min-height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch; // ВАЖНО: заставляет всех детей растягиваться на 100% ширины
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding: 24px 16px;
+    min-height: calc(100vh - 80px);
+  }
+}
+
+.loading, .empty {
+  flex: 1; // Занимает всю оставшуюся высоту
+  width: 100%; // ВАЖНО: растягивает белую карточку на всю ширину страницы
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 40px;
+  font-size: 16px;
+  color: #64748b;
+  font-weight: 500;
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.02);
+  box-sizing: border-box; // Защищает от вырезания паддингов за края экрана
 }

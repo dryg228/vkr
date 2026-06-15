@@ -1,7 +1,7 @@
 import { makeAutoObservable, runInAction } from 'mobx';
 import { v4 as uuidv4 } from 'uuid';
 import { Car, CarFormData, Rental, RentalFormData, Location, LocationFormData, Review, FilterParams, calculateRentalDays, formatCarName } from '@/types';
-import FirebaseService from '@/firebase';
+import FirebaseService from '../firebase';
 import { authStore } from './AuthStore';
 
 export class DataStore {
@@ -13,6 +13,11 @@ export class DataStore {
   carsLoading = false;
   rentalsLoading = false;
   locationsLoading = false;
+  
+  // Шаблоны конфигураций марок машин из Firebase
+  brandTemplates: Record<string, { fuelType: 'petrol' | 'diesel' | 'electric' | 'hybrid'; transmission: 'manual' | 'automatic'; pricePerDay: number; seats: number }> = {};
+  templatesLoading = false;
+
   error: string | null = null;
   filters: FilterParams = {};
   selectedLocationId: string | null = null;
@@ -38,16 +43,55 @@ export class DataStore {
   get activeLocations(): Location[] { return this.locations.filter(l => l.isActive).sort((a, b) => a.name.localeCompare(b.name, 'ru')); }
   get activeRentals(): Rental[] { return this.rentals.filter(r => r.status !== 'cancelled' && r.status !== 'completed'); }
 
-  getCarById = (id: string): Car | undefined => this.cars.find(c => c.id === id);
-  getLocationById = (id: string): Location | undefined => this.locations.find(l => l.id === id);
-  getRentalById = (id: string): Rental | undefined => this.rentals.find(r => r.id === id);
-  getReviewsForCar = (carId: string): Review[] => this.reviews.filter(r => r.carId === carId);
+  getCarById(id: string): Car | undefined { return this.cars.find(c => c.id === id); }
+  getLocationById(id: string): Location | undefined { return this.locations.find(l => l.id === id); }
+  getRentalById(id: string): Rental | undefined { return this.rentals.find(r => r.id === id); }
+  getReviewsForCar(carId: string): Review[] { return this.reviews.filter(r => r.carId === carId); }
 
-  loadAllData = async (): Promise<void> => {
-    await Promise.all([this.loadLocations(), this.loadCars(), this.loadRentals(), this.loadReviews()]);
-  };
+  setFilter(key: keyof FilterParams, value: any): void {
+    this.filters[key] = value;
+  }
 
-  loadCars = async (): Promise<void> => {
+  async loadAllData(): Promise<void> {
+    await Promise.all([
+      this.loadLocations(), 
+      this.loadCars(), 
+      this.loadRentals(), 
+      this.loadReviews(), 
+      this.loadBrandTemplates()
+    ]);
+  }
+
+    async loadBrandTemplates(): Promise<void> {
+  this.templatesLoading = true;
+  try {
+    // Передаем пустую строку для чтения корня базы
+    const data = await FirebaseService.getData<Record<string, any>>('');
+    
+    runInAction(() => { 
+      if (data) {
+        const templates: Record<string, any> = {};
+        Object.keys(data).forEach(key => {
+          // Исключаем системные таблицы, оставляя только марки машин
+          if (key !== 'cars' && key !== 'rentals' && key !== 'locations' && key !== 'reviews') {
+            templates[key] = data[key];
+          }
+        });
+        this.brandTemplates = templates;
+      }
+      this.templatesLoading = false; 
+    });
+  } catch (error) {
+    runInAction(() => { 
+      console.error('Ошибка загрузки шаблонов:', error);
+      this.templatesLoading = false; 
+    });
+  }
+}
+
+
+
+  async loadCars(): Promise<void> {
     this.carsLoading = true;
     try {
       const data = await FirebaseService.getData<Record<string, Car>>('cars');
@@ -55,9 +99,9 @@ export class DataStore {
     } catch (error) {
       runInAction(() => { this.error = 'Ошибка загрузки автомобилей'; this.carsLoading = false; });
     }
-  };
+  }
 
-  loadRentals = async (): Promise<void> => {
+      async loadRentals(): Promise<void> {
     this.rentalsLoading = true;
     try {
       const data = await FirebaseService.getData<Record<string, Rental>>('rentals');
@@ -65,31 +109,31 @@ export class DataStore {
     } catch (error) {
       runInAction(() => { this.error = 'Ошибка загрузки аренд'; this.rentalsLoading = false; });
     }
-  };
+  }
 
-  loadLocations = async (): Promise<void> => {
+  async loadLocations(): Promise<void> {
     this.locationsLoading = true;
     try {
       const data = await FirebaseService.getData<Record<string, Location>>('locations');
       runInAction(() => {
-        this.locations = data
-          ? Object.entries(data).map(([key, loc]) => ({ ...loc, id: key }))
+        this.locations = data && typeof data === 'object'
+          ? Object.entries(data).map(([key, loc]) => ({ ...(loc as Location), id: key }))
           : [];
         this.locationsLoading = false;
       });
     } catch (error) {
       runInAction(() => { this.error = 'Ошибка загрузки локаций'; this.locationsLoading = false; });
     }
-  };
+  }
 
-  loadReviews = async (): Promise<void> => {
+  async loadReviews(): Promise<void> {
     try {
       const data = await FirebaseService.getData<Record<string, Review>>('reviews');
       runInAction(() => { this.reviews = data ? Object.values(data) : []; });
     } catch (error) { console.error('Load reviews error:', error); }
-  };
+  }
 
-  createCar = async (data: CarFormData): Promise<Car | null> => {
+  async createCar(data: CarFormData): Promise<Car | null> {
     if (!authStore.canManageCars()) return null;
     const now = new Date().toISOString();
     const car: Car = { id: uuidv4(), ...data, ownerId: authStore.currentRole, status: 'available', isActive: true, createdAt: now, updatedAt: now };
@@ -98,63 +142,128 @@ export class DataStore {
       runInAction(() => { this.cars.push(car); });
       return car;
     } catch (error) { console.error('Create car error:', error); return null; }
-  };
+  }
 
-  updateCar = async (id: string, data: Partial<CarFormData>): Promise<boolean> => {
-    if (!authStore.canManageCars()) return false;
+    async updateCar(id: string, data: Partial<CarFormData> & { status?: string }): Promise<boolean> {
     const index = this.cars.findIndex(c => c.id === id);
     if (index === -1) return false;
-    const updated = { ...this.cars[index], ...data, updatedAt: new Date().toISOString() };
+    
+    const updated = { 
+      ...this.cars[index], 
+      ...data, 
+      updatedAt: new Date().toISOString() 
+    };
+
     try {
       await FirebaseService.setData(`cars/${id}`, updated);
-      runInAction(() => { this.cars[index] = updated; });
-      return true;
-    } catch (error) { console.error('Update car error:', error); return false; }
-  };
+      
+      // Передаем измененный массив целиком или используем явное присвоение вне стрелочной мутации
+      runInAction(() => { 
+  this.cars.splice(index, 1, updated as Car); 
+});
 
-  deleteCar = async (id: string): Promise<boolean> => {
+
+      return true;
+    } catch (error) { 
+      console.error('Update car error:', error); 
+      return false; 
+    }
+  }
+
+  async deleteCar(id: string): Promise<boolean> {
     if (!authStore.canManageCars()) return false;
     const index = this.cars.findIndex(c => c.id === id);
     if (index === -1) return false;
+    
     try {
       await FirebaseService.updateData(`cars/${id}`, { isActive: false });
-      runInAction(() => { this.cars[index].isActive = false; });
+      runInAction(() => { 
+        this.cars[index] = { ...this.cars[index], isActive: false };
+      });
       return true;
-    } catch (error) { console.error('Delete car error:', error); return false; }
-  };
+    } catch (error) { 
+      console.error('Delete car error:', error); 
+      return false; 
+    }
+  }
 
-  createRental = async (data: RentalFormData): Promise<Rental | null> => {
+
+  // ОПТИМИЗИРОВАННЫЙ МЕТОД: Закрепляет авто за юзером и блокирует его для остальных
+  async createRental(data: RentalFormData): Promise<Rental | null> {
     if (!authStore.canCreateRentals()) return null;
     const car = this.getCarById(data.carId);
-    if (!car) return null;
-    const totalDays = calculateRentalDays(data.startDate, data.endDate);
-    const now = new Date().toISOString();
-    const rental: Rental = {
-      id: uuidv4(), carId: data.carId, carName: formatCarName(car), renterId: authStore.currentRole, renterName: data.renterName,
-      startDate: data.startDate, endDate: data.endDate, totalDays, totalPrice: totalDays * car.pricePerDay,
-      status: 'pending', notes: data.notes || '', createdAt: now, updatedAt: now
-    };
-    try {
-      await FirebaseService.setData(`rentals/${rental.id}`, rental);
-      runInAction(() => { this.rentals.push(rental); });
-      await this.updateCar(data.carId, {} as Partial<CarFormData>);
-      return rental;
-    } catch (error) { console.error('Create rental error:', error); return null; }
-  };
+    if (!car || car.status !== 'available') return null; // Защита: нельзя арендовать уже занятую машину
+    
+    // Найдите эту строчку в методе createRental внутри DataStore.ts:
+const totalDays = calculateRentalDays(data.startDate, data.endDate) || 1; // Если вернулся 0 или NaN, берем минимум 1 день
 
-  updateRentalStatus = async (id: string, status: Rental['status']): Promise<boolean> => {
-    if (!authStore.canManageRentals()) return false;
+    const now = new Date().toISOString();
+    
+    const rental: Rental = {
+      id: uuidv4(), 
+      carId: data.carId, 
+      carName: formatCarName(car), 
+      renterId: authStore.currentRole, 
+      renterName: data.renterName, // Привязка к имени/id арендатора
+      startDate: data.startDate, 
+      endDate: data.endDate, 
+      totalDays, 
+      totalPrice: totalDays * car.pricePerDay,
+      status: 'confirmed', // Сразу подтверждаем
+      notes: data.notes || '', 
+      createdAt: now, 
+      updatedAt: now
+    };
+    
+    try {
+      // 1. Сохраняем заявку на аренду в Firebase
+      await FirebaseService.setData(`rentals/${rental.id}`, rental);
+      
+      // 2. Меняем статус машины на 'rented', чтобы убрать из общего каталога
+      await this.updateCar(data.carId, { status: 'rented' });
+      
+      runInAction(() => { 
+        this.rentals.push(rental); 
+      });
+      return rental;
+    } catch (error) { 
+      console.error('Create rental error:', error); 
+      return null; 
+    }
+  }
+
+  async updateRentalStatus(id: string, status: Rental['status']): Promise<boolean> {
     const index = this.rentals.findIndex(r => r.id === id);
     if (index === -1) return false;
-    const updated = { ...this.rentals[index], status, updatedAt: new Date().toISOString() };
+    const rental = this.rentals[index];
+    const updated = { ...rental, status, updatedAt: new Date().toISOString() };
     try {
       await FirebaseService.setData(`rentals/${id}`, updated);
       runInAction(() => { this.rentals[index] = updated; });
+      
+      // Если аренда завершена или отменена — освобождаем машину обратно в каталог
+      if (status === 'completed' || status === 'cancelled') {
+        await this.updateCar(rental.carId, { status: 'available' });
+      }
       return true;
     } catch (error) { console.error('Update rental error:', error); return false; }
-  };
+  }
 
-  createLocation = async (data: LocationFormData): Promise<Location | null> => {
+  async deleteRental(id: string): Promise<boolean> {
+    if (!authStore.canManageRentals()) return false;
+    const index = this.rentals.findIndex(r => r.id === id);
+    if (index === -1) return false;
+    const rental = this.rentals[index];
+    try {
+      await FirebaseService.setData(`rentals/${id}`, null);
+      // Освобождаем авто при удалении записи аренды
+      await this.updateCar(rental.carId, { status: 'available' });
+      runInAction(() => { this.rentals.splice(index, 1); });
+      return true;
+    } catch (error) { console.error('Delete rental error:', error); return false; }
+  }
+
+  async createLocation(data: LocationFormData): Promise<Location | null> {
     if (!authStore.canManageLocations()) return null;
     const now = new Date().toISOString();
     const location: Location = { id: uuidv4(), ...data, isActive: true, createdAt: now, updatedAt: now };
@@ -163,24 +272,21 @@ export class DataStore {
       runInAction(() => { this.locations.push(location); });
       return location;
     } catch (error) { console.error('Create location error:', error); return null; }
-  };
+  }
 
-  updateLocation = async (id: string, data: Partial<LocationFormData>): Promise<boolean> => {
+  async updateLocation(id: string, data: Partial<LocationFormData>): Promise<boolean> {
     if (!authStore.canManageLocations()) return false;
     const index = this.locations.findIndex(l => l.id === id);
     if (index === -1) return false;
-    const definedPatch = Object.fromEntries(
-      Object.entries(data).filter(([, v]) => v !== undefined)
-    ) as Partial<LocationFormData>;
-    const updated = { ...this.locations[index], ...definedPatch, id, updatedAt: new Date().toISOString() };
+    const updated = { ...this.locations[index], ...data, updatedAt: new Date().toISOString() };
     try {
       await FirebaseService.setData(`locations/${id}`, updated);
       runInAction(() => { this.locations[index] = updated; });
       return true;
     } catch (error) { console.error('Update location error:', error); return false; }
-  };
+  }
 
-  deleteLocation = async (id: string): Promise<boolean> => {
+  async deleteLocation(id: string): Promise<boolean> {
     if (!authStore.canManageLocations()) return false;
     const index = this.locations.findIndex(l => l.id === id);
     if (index === -1) return false;
@@ -189,12 +295,7 @@ export class DataStore {
       runInAction(() => { this.locations[index].isActive = false; });
       return true;
     } catch (error) { console.error('Delete location error:', error); return false; }
-  };
-
-  setFilter = (key: keyof FilterParams, value: string | undefined): void => { this.filters = { ...this.filters, [key]: value }; };
-  clearFilters = (): void => { this.filters = {}; };
-  setSelectedLocation = (locationId: string | null): void => { this.selectedLocationId = locationId; this.filters.locationId = locationId || undefined; };
-  clearError = (): void => { this.error = null; };
+  }
 }
 
 export const dataStore = new DataStore();

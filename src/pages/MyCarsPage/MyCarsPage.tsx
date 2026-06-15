@@ -1,76 +1,83 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { dataStore, authStore } from '@/store';
 import { Card, Button, Badge, Modal, Input, Select } from '@/components/UI';
 import { Car, CarFormData, getCarStatusLabel, getFuelTypeLabel, getTransmissionLabel, formatCarName } from '@/types';
 import styles from './MyCarsPage.module.scss';
 
-
-const brandTemplates: Record<string, { fuelType: 'petrol' | 'diesel' | 'electric' | 'hybrid'; transmission: 'manual' | 'automatic'; pricePerDay: number; seats: number }> = {
-  'ВАЗ': { fuelType: 'petrol', transmission: 'manual', pricePerDay: 1500, seats: 5 },
-  'Lada': { fuelType: 'petrol', transmission: 'manual', pricePerDay: 2000, seats: 5 },
-  'ГАЗ': { fuelType: 'petrol', transmission: 'manual', pricePerDay: 2500, seats: 5 },
-  'УАЗ': { fuelType: 'petrol', transmission: 'manual', pricePerDay: 3000, seats: 5 },
-  'Москвич': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 2500, seats: 5 },
-
-  'Audi': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 5500, seats: 5 },
-  'BMW': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 6000, seats: 5 },
-  'Mercedes-Benz': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 7000, seats: 5 },
-  'Opel': { fuelType: 'petrol', transmission: 'manual', pricePerDay: 2500, seats: 5 },
-  'Porsche': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 12000, seats: 4 },
-  'Volkswagen': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 3500, seats: 5 },
-
-  'Honda': { fuelType: 'hybrid', transmission: 'automatic', pricePerDay: 3500, seats: 5 },
-  'Infiniti': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 5000, seats: 5 },
-  'Lexus': { fuelType: 'hybrid', transmission: 'automatic', pricePerDay: 6500, seats: 5 },
-  'Mazda': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 4000, seats: 5 },
-  'Mitsubishi': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 3500, seats: 5 },
-  'Nissan': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 3500, seats: 5 },
-  'Subaru': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 4500, seats: 5 },
-  'Suzuki': { fuelType: 'petrol', transmission: 'manual', pricePerDay: 3000, seats: 5 },
-  'Toyota': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 4500, seats: 5 },
-
-  'Daewoo': { fuelType: 'petrol', transmission: 'manual', pricePerDay: 1500, seats: 5 },
-  'Genesis': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 6500, seats: 5 },
-  'Hyundai': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 3500, seats: 5 },
-  'Kia': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 3500, seats: 5 },
-
-  'Byd': { fuelType: 'electric', transmission: 'automatic', pricePerDay: 5500, seats: 5 },
-  'Changan': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 4000, seats: 5 },
-  'Chery': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 3500, seats: 5 },
-  'Exeed': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 5000, seats: 5 },
-  'Geely': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 4000, seats: 5 },
-  'Haval': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 3800, seats: 5 },
-  'LiAuto': { fuelType: 'hybrid', transmission: 'automatic', pricePerDay: 8500, seats: 6 },
-  'Zeekr': { fuelType: 'electric', transmission: 'automatic', pricePerDay: 9000, seats: 5 },
-
-  'Tesla': { fuelType: 'electric', transmission: 'automatic', pricePerDay: 8000, seats: 5 },
-  'Ford': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 4000, seats: 5 },
-  'Skoda': { fuelType: 'petrol', transmission: 'automatic', pricePerDay: 3500, seats: 5 },
-  'Volvo': { fuelType: 'diesel', transmission: 'automatic', pricePerDay: 5500, seats: 5 }
-};
-
 export const MyCarsPage = observer(() => {
-  const { cars, activeLocations, createCar, updateCar, deleteCar, getLocationById } = dataStore;
+  const { 
+    cars, 
+    activeLocations, 
+    createCar, 
+    updateCar, 
+    deleteCar, 
+    getLocationById,
+    brandTemplates,       // Получаем шаблоны марок из Firebase
+    loadBrandTemplates,   // Метод загрузки шаблонов из БД
+    templatesLoading      // Индикатор загрузки данных
+  } = dataStore;
+
+  const { isAdmin, isAuthenticated } = authStore;
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCar, setEditingCar] = useState<Car | null>(null);
-  const [formData, setFormData] = useState<CarFormData>({ brand: '', model: '', year: 2026, licensePlate: '', fuelType: 'petrol', transmission: 'automatic', seats: 5, pricePerDay: 2000, locationId: '' });
-
-
+  const [formData, setFormData] = useState<CarFormData>({ 
+    brand: '', 
+    model: '', 
+    year: 2026, 
+    licensePlate: '', 
+    fuelType: 'petrol', 
+    transmission: 'automatic', 
+    seats: 5, 
+    pricePerDay: 2000, 
+    locationId: '' 
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const authAny = authStore as any;
 
-  const allBrands = [
-    { value: 'ВАЗ', label: 'ВАЗ (Lada)' }, { value: 'ГАЗ', label: 'ГАЗ' }, { value: 'УАЗ', label: 'УАЗ' }, { value: 'Москвич', label: 'Москвич' },
-    { value: 'Audi', label: 'Audi' }, { value: 'BMW', label: 'BMW' }, { value: 'Mercedes-Benz', label: 'Mercedes-Benz' }, { value: 'Opel', label: 'Opel' }, { value: 'Porsche', label: 'Porsche' }, { value: 'Volkswagen', label: 'Volkswagen' },
-    { value: 'Honda', label: 'Honda' }, { value: 'Infiniti', label: 'Infiniti' }, { value: 'Lexus', label: 'Lexus' }, { value: 'Mazda', label: 'Mazda' }, { value: 'Mitsubishi', label: 'Mitsubishi' }, { value: 'Nissan', label: 'Nissan' }, { value: 'Subaru', label: 'Subaru' }, { value: 'Suzuki', label: 'Suzuki' }, { value: 'Toyota', label: 'Toyota' },
-    { value: 'Daewoo', label: 'Daewoo' }, { value: 'Genesis', label: 'Genesis' }, { value: 'Hyundai', label: 'Hyundai' }, { value: 'Kia', label: 'Kia' },
-    { value: 'Byd', label: 'BYD' }, { value: 'Changan', label: 'Changan' }, { value: 'Chery', label: 'Chery' }, { value: 'Exeed', label: 'Exeed' }, { value: 'Geely', label: 'Geely' }, { value: 'Haval', label: 'Haval' }, { value: 'LiAuto', label: 'LiXiang (Li)' }, { value: 'Zeekr', label: 'Zeekr' },
-    { value: 'Tesla', label: 'Tesla' }, { value: 'Ford', label: 'Ford' }, { value: 'Skoda', label: 'Skoda' }, { value: 'Volvo', label: 'Volvo' }
-  ];
+  // 1. Загружаем шаблоны марок из Firebase при монтировании страницы
+  useEffect(() => {
+    loadBrandTemplates();
+  }, []);
+
+  // 2. Формируем список брендов динамически из ключей базы данных
+   // 1. Извлекаем ключи из базы данных
+  const brandKeys = Object.keys(brandTemplates || {});
+
+  // 2. Если вдруг БД пустая или ещё грузится, создаем временный запасной список, чтобы интерфейс не ломался
+  const fallbackBrands = ['ВАЗ', 'Lada', 'Audi', 'BMW', 'Mercedes-Benz', 'Toyota', 'Kia', 'Hyundai', 'Tesla'];
+  const finalBrandsList = brandKeys.length > 0 ? brandKeys : fallbackBrands;
+
+  // 3. Формируем массив для селекта. Передаем и структуру объектов, и плоский список, чтобы точно сработало
+  const allBrands = finalBrandsList.map(brandName => ({
+    value: brandName,
+    id: brandName,       // На случай, если ваш селект ищет id вместо value
+    label: brandName === 'ВАЗ' ? 'ВАЗ (Lada)' : brandName
+  }));
 
   allBrands.sort((a, b) => a.label.localeCompare(b.label));
+
+
+  allBrands.sort((a, b) => a.label.localeCompare(b.label));
+
+  // 3. Автоматически заполняем начальные значения, когда шаблоны загрузились из Firebase
+  useEffect(() => {
+    if (allBrands.length > 0 && !formData.brand && !editingCar) {
+      const defaultBrand = allBrands[0]?.value || '';
+      const template = brandTemplates[defaultBrand];
+      setFormData(prev => ({
+        ...prev,
+        brand: defaultBrand,
+        fuelType: template?.fuelType || 'petrol',
+        transmission: template?.transmission || 'automatic',
+        seats: template?.seats || 5,
+        pricePerDay: template?.pricePerDay || 2000,
+        locationId: activeLocations && activeLocations.length > 0 ? activeLocations[0].id : ''
+      }));
+    }
+  }, [brandTemplates, activeLocations, editingCar]);
 
   const handleBrandChange = (brandValue: string) => {
     const template = brandTemplates[brandValue];
@@ -104,10 +111,22 @@ export const MyCarsPage = observer(() => {
     }
   });
 
-  const handleOpenModal = (car?: Car) => {
+    const handleOpenModal = (car?: Car) => {
+    if (!isAuthenticated) return; // Проверяем просто авторизацию, а не только админа
+    
     if (car) {
       setEditingCar(car);
-      setFormData({ brand: car.brand, model: car.model, year: car.year, licensePlate: car.licensePlate, fuelType: car.fuelType, transmission: car.transmission, seats: car.seats, pricePerDay: car.pricePerDay, locationId: car.locationId });
+      setFormData({ 
+        brand: car.brand, 
+        model: car.model, 
+        year: car.year, 
+        licensePlate: car.licensePlate, 
+        fuelType: car.fuelType, 
+        transmission: car.transmission, 
+        seats: car.seats, 
+        pricePerDay: car.pricePerDay, 
+        locationId: car.locationId 
+      });
     } else {
       setEditingCar(null);
       const defaultBrand = allBrands[0]?.value || '';
@@ -132,15 +151,9 @@ export const MyCarsPage = observer(() => {
   const handleSubmit = async () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.brand) {
-      newErrors.brand = 'Выберите марку автомобиля.';
-    }
-    if (!formData.model.trim()) {
-      newErrors.model = 'Укажите модель автомобиля.';
-    }
-    if (!formData.licensePlate.trim()) {
-      newErrors.licensePlate = 'Введите госномер.';
-    }
+    if (!formData.brand) newErrors.brand = 'Выберите марку автомобиля.';
+    if (!formData.model.trim()) newErrors.model = 'Укажите модель автомобиля.';
+    if (!formData.licensePlate.trim()) newErrors.licensePlate = 'Введите госномер.';
 
     const currentYear = new Date().getFullYear();
     if (!formData.year || formData.year < 1900 || formData.year > currentYear) {
@@ -163,6 +176,7 @@ export const MyCarsPage = observer(() => {
     if (editingCar) {
       await updateCar(editingCar.id, formData);
     } else {
+      // Автоматически обогащаем данными о владельце при создании пользователем
       const enrichedData = {
         ...formData,
         ownerName: authAny.isAdmin ? 'Админ' : 'Пользователь',
@@ -173,13 +187,22 @@ export const MyCarsPage = observer(() => {
     setIsModalOpen(false);
   };
 
-  const handleDelete = async (id: string) => { if (confirm('Удалить автомобиль?')) await deleteCar(id); };
+  const handleDelete = async (id: string) => { 
+    if (confirm('Удалить автомобиль?')) await deleteCar(id); 
+  };
+
+  if (templatesLoading) {
+    return <div className={styles.loading}>Загрузка конфигураций...</div>;
+  }
 
   return (
     <div className={styles.page}>
       <div className={styles.header}>
         <h1 className={styles.title}>Мои автомобили</h1>
-        <Button variant="primary" onClick={() => handleOpenModal()}>Добавить авто</Button>
+        {/* Кнопка теперь доступна всем вошедшим пользователям */}
+        {isAuthenticated && (
+          <Button variant="primary" onClick={() => handleOpenModal()}>Добавить авто</Button>
+        )}
       </div>
 
       {myCars.length === 0 ? (
@@ -199,8 +222,10 @@ export const MyCarsPage = observer(() => {
                 <span>{getTransmissionLabel(car.transmission)}</span>
                 <span>{car.seats} мест</span>
               </div>
-              <p className={styles.location}>{getLocationById(car.locationId)?.name}</p>
+              <p className={styles.location}>{getLocationById(car.locationId)?.name || 'Не указана'}</p>
               <div className={styles.carPrice}>{car.pricePerDay} ₽/день</div>
+              
+              {/* Управление своими машинами разрешено всем авторизованным пользователям */}
               <div className={styles.carActions}>
                 <Button size="sm" variant="secondary" onClick={() => handleOpenModal(car)}>Редактировать</Button>
                 <Button size="sm" variant="danger" onClick={() => handleDelete(car.id)}>Удалить</Button>

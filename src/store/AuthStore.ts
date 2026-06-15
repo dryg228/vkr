@@ -1,19 +1,7 @@
-import { makeAutoObservable } from 'mobx';
+import { makeAutoObservable, runInAction } from 'mobx';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/firebase';
 import { User, UserRole, ROLE_PERMISSIONS, RolePermissions } from '@/types';
-
-const AUTH_STORAGE_KEY = 'car_rental_auth';
-const SESSION_EXPIRY_KEY = 'car_rental_session_expiry';
-const SESSION_DURATION = 24 * 60 * 60 * 1000;
-
-const AUTH_CREDENTIALS: Record<Exclude<UserRole, 'guest'>, string> = {
-  owner: 'owner2026-rental',
-  admin: 'admin2026-rental',
-};
-
-interface StoredAuthState {
-  role: UserRole;
-  expiry: number;
-}
 
 export class AuthStore {
   private _user: User = { role: 'guest' };
@@ -23,7 +11,7 @@ export class AuthStore {
 
   constructor() {
     makeAutoObservable(this, {}, { autoBind: true });
-    this.loadAuthState();
+    this.initAuthListener();
   }
 
   get user(): User { return this._user; }
@@ -47,74 +35,72 @@ export class AuthStore {
     return roleHierarchy[this._user.role] >= roleHierarchy[requiredRole];
   };
 
-  private loadAuthState = (): void => {
-    try {
-      const storedData = localStorage.getItem(AUTH_STORAGE_KEY);
-      const expiryData = localStorage.getItem(SESSION_EXPIRY_KEY);
-      if (storedData && expiryData) {
-        const authState: StoredAuthState = JSON.parse(storedData);
-        const expiry = parseInt(expiryData, 10);
-        if (Date.now() < expiry && authState.role !== 'guest') {
-          this._user = { role: authState.role };
+    private initAuthListener = (): void => {
+    onAuthStateChanged(auth, (firebaseUser) => {
+      runInAction(() => {
+        if (firebaseUser) {
+          const role: UserRole = firebaseUser.email?.startsWith('admin') ? 'admin' : 'owner';
+          
+          // Извлекаем имя из почты (все символы до знака '@'), если displayName не задан
+          const fallbackName = firebaseUser.email ? firebaseUser.email.split('@')[0] : 'Пользователь';
+          const name = firebaseUser.displayName || fallbackName;
+
+          // Сохраняем все данные в состояние стора
+          this._user = {
+            role,
+            email: firebaseUser.email || '',
+            name: name
+          } as any; // Приведение к any временно защитит от строгих ограничений типов
         } else {
-          this.clearAuthStorage();
+          this._user = { role: 'guest' };
         }
-      }
-    } catch (error) {
-      console.error('Failed to load auth state:', error);
-      this.clearAuthStorage();
-    }
+      });
+    });
   };
 
-  private saveAuthState = (): void => {
-    try {
-      if (this._user.role !== 'guest') {
-        const authState: StoredAuthState = { role: this._user.role, expiry: Date.now() + SESSION_DURATION };
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authState));
-        localStorage.setItem(SESSION_EXPIRY_KEY, String(authState.expiry));
-      } else {
-        this.clearAuthStorage();
-      }
-    } catch (error) {
-      console.error('Failed to save auth state:', error);
-    }
-  };
-
-  private clearAuthStorage = (): void => {
-    try {
-      localStorage.removeItem(AUTH_STORAGE_KEY);
-      localStorage.removeItem(SESSION_EXPIRY_KEY);
-    } catch (error) {
-      console.error('Failed to clear auth storage:', error);
-    }
-  };
 
   openLoginModal = (): void => { this.loginModalOpen = true; this.loginError = null; };
   closeLoginModal = (): void => { this.loginModalOpen = false; this.loginError = null; this.isLoading = false; };
 
-  login = async (role: Exclude<UserRole, 'guest'>, password: string): Promise<boolean> => {
+  register = async (email: string, password: string): Promise<boolean> => {
     this.isLoading = true;
     this.loginError = null;
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      if (AUTH_CREDENTIALS[role] === password) {
-        this._user = { role };
-        this.saveAuthState();
-        this.closeLoginModal();
-        return true;
-      } else {
-        this.loginError = 'Неверный пароль';
-        return false;
-      }
-    } catch (error) {
-      this.loginError = 'Ошибка авторизации';
+      await createUserWithEmailAndPassword(auth, email, password);
+      this.closeLoginModal();
+      return true;
+    } catch (error: any) {
+      runInAction(() => { this.loginError = error.message || 'Ошибка регистрации'; });
       return false;
     } finally {
-      this.isLoading = false;
+      runInAction(() => { this.isLoading = false; });
     }
   };
 
-  logout = (): void => { this._user = { role: 'guest' }; this.clearAuthStorage(); this.loginError = null; };
+  login = async (email: string, password: string): Promise<boolean> => {
+    this.isLoading = true;
+    this.loginError = null;
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      this.closeLoginModal();
+      return true;
+    } catch (error: any) {
+      runInAction(() => { this.loginError = 'Неверный логин или пароль'; });
+      return false;
+    } finally {
+      runInAction(() => { this.isLoading = false; });
+    }
+  };
+
+  logout = async (): Promise<void> => {
+    try {
+      await signOut(auth);
+      runInAction(() => { this._user = { role: 'guest' }; this.loginError = null; });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   clearError = (): void => { this.loginError = null; };
 }
 

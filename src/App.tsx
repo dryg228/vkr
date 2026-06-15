@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { navigationStore, dataStore } from '@/store';
 import { MainLayout, LoginModal, ConfirmModal, Toast } from '@/components';
-import { HomePage, CarsPage, RentalsPage, MyCarsPage, AdminPage } from '@/pages';
+import { HomePage, CarsPage, RentalsPage, MyCarsPage, AdminPage, ProfilePage } from '@/pages'; // <-- Добавлен импорт ProfilePage
 
 const PageRouter = observer(() => {
   const { currentPage } = navigationStore;
@@ -15,6 +15,8 @@ const PageRouter = observer(() => {
     case 'admin-cars':
     case 'admin-locations':
     case 'admin-rentals': return <AdminPage />;
+    // ДОБАВЛЕН КЕЙС ДЛЯ ЛИЧНОГО КАБИНЕТА:
+    case 'profile': return <ProfilePage />; 
     default: return <HomePage />;
   }
 });

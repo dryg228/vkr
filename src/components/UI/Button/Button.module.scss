@@ -1,3 +1,4 @@
+@use "sass:color";
 @use '@/styles/globalColors' as *;
 @use '@/styles/variables' as *;
 @use '@/styles/mixins' as *;
@@ -33,7 +34,6 @@
   }
 }
 
-// Variants
 .primary {
   background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
   color: $color-text-inverse;
@@ -76,7 +76,7 @@
   color: $color-text-inverse;
   
   &:hover:not(:disabled) {
-    background: darken($color-error, 10%);
+    background: color.scale($color-error, $lightness: -10%);
     box-shadow: $shadow-md;
   }
 }
@@ -86,12 +86,11 @@
   color: $color-text-inverse;
   
   &:hover:not(:disabled) {
-    background: darken($color-success, 10%);
+    background: color.scale($color-success, $lightness: -10%);
     box-shadow: $shadow-md;
   }
 }
 
-// Sizes
 .sm {
   padding: 10px 20px;
   font-size: $font-size-sm;
@@ -110,7 +109,6 @@
   border-radius: $radius-xl;
 }
 
-// States
 .fullWidth {
   width: 100%;
 }
@@ -132,7 +130,6 @@
   }
 }
 
-// Elements
 .icon {
   display: inline-flex;
   align-items: center;

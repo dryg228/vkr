@@ -5,16 +5,18 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: $spacing-xl;
+  gap: 32px; // Оптимальный отступ для дашбордов
   width: 100%;
   max-width: 1200px;
   min-height: 500px;
   margin: 0 auto;
-  padding: 0 $spacing-xl;
+  padding: 40px $spacing-xl;
   box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
 
   @include mobile {
-    padding: 0 $spacing-md;
+    padding: 24px $spacing-md;
+    gap: 24px;
   }
 }
 
@@ -28,22 +30,45 @@
   @include mobile {
     flex-direction: column;
     align-items: stretch;
+    gap: 16px;
+
+    // Растягиваем кнопку создания на весь экран смартфона
+    button, :global(.ui-button) {
+      width: 100%;
+      height: 48px;
+    }
   }
 }
 
 .title {
   margin: 0;
-  font-size: $font-size-2xl;
-  font-weight: $font-weight-bold;
+  font-size: 32px; // Современный крупный заголовок
+  font-weight: 800; // Ультра-жирный шрифт для премиального стиля
+  color: #0f172a; // Глубокий графитовый оттенок
+  letter-spacing: -0.75px;
+
+  @include mobile {
+    font-size: 24px;
+  }
 }
 
 .filters {
   display: flex;
-  gap: $spacing-md;
+  gap: 16px;
   width: 100%;
   justify-content: flex-start;
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.02); // Едва заметная тень для объема
+  box-sizing: border-box;
+
+  @include mobile {
+    padding: 12px;
+  }
 }
 
+// Повышаем читаемость селектора и делаем его более нативным
 .page .filters .statusSelect {
   width: 240px;
   min-width: 240px;
@@ -58,6 +83,19 @@
   & > select,
   & > div {
     width: 100%;
+    height: 46px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    font-weight: 600;
+    color: #334155;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:focus {
+      border-color: #2563eb; // Фирменный синий акцент при фокусе
+      background: #ffffff;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
   }
 }
 
@@ -67,34 +105,90 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 200px;
-  background: $color-bg-primary;
-  border-radius: $radius-xl;
-  color: $color-text-muted;
+  min-height: 240px;
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid #f1f5f9;
+  color: #64748b;
   font-size: $font-size-lg;
+  font-weight: 500;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.02);
   box-sizing: border-box;
 }
 
+// Ультра-современная адаптивная обертка для таблиц
 .tableCard {
   width: 100%;
   overflow-x: auto;
   box-sizing: border-box;
-  background: $color-bg-primary;
-  border-radius: $radius-xl;
+  background: #ffffff;
+  border-radius: 24px; // Сильное скругление карточки
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.03); // Мягкая премиальная тень
   margin: 0 !important;      
+  -webkit-overflow-scrolling: touch;
+
+  @include mobile {
+    border-radius: 16px;
+  }
+
+  // Кастомизация внутренних элементов таблицы для идеального UI
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 750px; // Предотвращает сжатие данных на смартфонах
+
+    th {
+      background: #f8fafc;
+      color: #64748b;
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 16px 24px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    td {
+      padding: 18px 24px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    // Стилизация кнопок внутри таблицы (например, действий админа)
+    button, :global(.ui-button) {
+      height: 36px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+  }
 }
 
 .inputWrapper {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   width: 100%;
 }
 
 .errorText {
-  color: #ff4d4f;
+  color: #f43f5e; // Красивый неоново-красный вместо грязного кирпичного
   font-size: 12px;
-  margin-top: -4px;
+  font-weight: 500;
+  margin-top: 4px;
   margin-bottom: 4px;
   text-align: left;
+  animation: slideDown 0.2s ease-out; // Плавное появление ошибки
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }

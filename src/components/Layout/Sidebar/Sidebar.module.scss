@@ -1,150 +1,151 @@
-@use '@/styles/globalColors' as *;
-@use '@/styles/variables' as *;
-@use '@/styles/mixins' as *;
-
-.overlay {
-  display: none;
-  
-  @include mobile-tablet {
-    display: block;
-    position: fixed;
-    top: $header-height;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: $z-modal-backdrop - 1;
-  }
-}
-
+// Базовые стили для десктопной версии
 .sidebar {
+  width: 260px;
+  min-width: 260px;
+  height: 100vh;
+  background: #ffffff;
+  border-right: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
   position: fixed;
-  top: $header-height;
+  top: 0;
   left: 0;
-  bottom: 0;
-  width: $sidebar-width;
-  background: linear-gradient(180deg, $color-bg-primary 0%, $color-bg-secondary 100%);
-  border-right: 1px solid $color-border-light;
-  z-index: $z-sticky;
-  display: flex;
-  flex-direction: column;
-  transition: all $transition-smooth;
-  overflow: hidden;
-  
-  @include mobile-tablet {
-    transform: translateX(-100%);
-    box-shadow: none;
-  }
-}
+  z-index: 100;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
 
-.open {
-  width: $sidebar-width;
-}
-
-.collapsed {
-  width: $sidebar-collapsed-width;
-  
-  .label {
-    opacity: 0;
-    width: 0;
-  }
-  
-  .navItem {
-    justify-content: center;
-    padding: $spacing-md;
-  }
-  
-  .footer {
-    opacity: 0;
-  }
-}
-
-.mobileOpen {
-  @include mobile-tablet {
-    transform: translateX(0);
-    box-shadow: $shadow-xl;
-  }
-}
-
-.nav {
-  flex: 1;
-  padding: $spacing-lg $spacing-md;
-  overflow-y: auto;
-  @include scrollbar-styled;
-}
-
-.navList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-sm;
-}
-
-.navItem {
-  @include flex-start;
-  gap: $spacing-md;
-  width: 100%;
-  padding: $spacing-md $spacing-lg;
-  background: transparent;
-  border: none;
-  border-radius: $radius-xl;
-  color: $color-text-secondary;
-  font-family: $font-family-secondary;
-  font-size: $font-size-base;
-  font-weight: $font-weight-semibold;
-  text-align: left;
-  cursor: pointer;
-  transition: all $transition-base;
-  
-  &:hover {
-    background: $color-bg-tertiary;
-    color: $color-text-primary;
-    transform: translateX(6px);
-  }
-  
-  &.active {
-    background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
-    color: $color-text-inverse;
-    box-shadow: 0 4px 16px rgba($color-primary, 0.4);
-    transform: translateX(4px);
+  &.collapsed {
+    width: 80px;
+    min-width: 80px;
     
-    .icon {
-      color: $color-text-inverse;
+    .label, .copyright {
+      display: none;
     }
   }
 }
 
-.icon {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: $color-primary-light;
-  transition: color $transition-fast;
-  
-  svg {
-    width: 22px;
-    height: 22px;
+// 📱 Мобильная адаптивность (Шторка меню)
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    // Меню занимает 85% ширины экрана для удобного закрытия тапом справа
+    width: 85% !important; 
+    max-width: 340px;
+    height: 100vh !important;
+    background: #ffffff;
+    box-shadow: 20px 0 40px rgba(15, 23, 42, 0.15);
+    border-right: none;
+    
+    // Плавное выдвижение слева
+    transform: translateX(-100%);
+    opacity: 0;
+    visibility: hidden;
+
+    &.mobileOpen {
+      transform: translateX(0);
+      opacity: 1;
+      visibility: visible;
+    }
   }
 }
 
-.label {
-  @include text-ellipsis;
-  transition: opacity $transition-fast, width $transition-fast;
+// Навигационный контейнер и список ссылок
+.nav {
+  flex: 1;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  @media (max-width: 768px) {
+    padding: 80px 16px 24px 16px; // Отступ сверху, чтобы элементы не заезжали под шапку с крестиком
+  }
+}
+
+.navList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+// Стильные элементы меню
+.navItem {
+  width: 100%;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  color: #475569;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+
+  &:hover {
+    background: #f8fafc;
+    color: #0f172a;
+  }
+
+  &.active {
+    background: #f1f5f9; // Светлый тон для выделения
+    color: #2563eb;     // Премиальный синий для иконки и текста
+
+    svg {
+      stroke: #2563eb;
+    }
+  }
+
+  .icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+
+    svg {
+      width: 20px;
+      height: 20px;
+      transition: stroke 0.2s ease;
+    }
+  }
+}
+
+// Задний полупрозрачный фон (Overlay), блокирующий клики по сайту при открытом меню
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px); // Размытие заднего фона в стиле iOS
+  z-index: 99;
+  animation: fadeIn 0.25s ease;
 }
 
 .footer {
-  padding: $spacing-md;
-  border-top: 1px solid $color-border-light;
-  text-align: center;
-  transition: opacity $transition-fast;
-  background: $color-bg-secondary;
+  padding: 16px;
+  border-top: 1px solid #f1f5f9;
+  
+  .copyright {
+    margin: 0;
+    font-size: 12px;
+    color: #94a3b8;
+    text-align: center;
+  }
 }
 
-.copyright {
-  font-size: $font-size-xs;
-  color: $color-text-muted;
-  margin: 0;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
