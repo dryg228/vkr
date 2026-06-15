@@ -79,6 +79,7 @@ export class DataStore {
       console.error('Ошибка загрузки шаблонов:', error);
     } finally {
 
+      
       runInAction(() => { this.templatesLoading = false; });
     }
   }
