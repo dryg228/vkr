@@ -93,7 +93,7 @@ export const MyCarsPage = observer(() => {
     if (errors[key]) setErrors(p => ({ ...p, [key]: '' }));
   };
 
-  const handleSubmit = async () => {
+    const handleSubmit = async () => {
     const errs: Record<string, string> = {};
     const curYear = new Date().getFullYear();
 
@@ -109,7 +109,6 @@ export const MyCarsPage = observer(() => {
 
     let finalData = { ...formData };
 
-    // Превращаем картинку в Base64 текст
     if (selectedFile) {
       const base64 = await new Promise<string>((resolve) => {
         const reader = new FileReader();
@@ -120,15 +119,13 @@ export const MyCarsPage = observer(() => {
     }
 
     if (editingCar) {
-      // ИСПРАВЛЕНО: Применяем приведение к any, чтобы предотвратить ошибку типизации isVerified.
-      // При редактировании владельцем машина заново уходит на модерацию (isVerified: false).
       const updatePayload = {
         ...finalData,
         isVerified: isAdmin ? (editingCar as any).isVerified : false
       };
       await updateCar(editingCar.id, updatePayload as any);
     } else {
-      await createCar({ ...finalData, isVerified: false, ownerId: userId, renterId: userId } as any);
+      await createCar({ ...finalData, ownerId: userId, renterId: userId } as any);
     }
     setIsModalOpen(false);
   };
@@ -146,32 +143,33 @@ export const MyCarsPage = observer(() => {
         <div className={styles.grid}>
           {myCars.map(car => (
             <Card key={car.id} className={styles.carCard}>
-              <div style={{ display: 'flex', gap: '16px' }}>
+              {/* ИСПРАВЛЕНО: Убран инлайновый стиль style={{display: 'flex'}}, заменен на класс */}
+              <div className={styles.carContent}>
                 {(car as any).carImageUrl && (
-                  <img src={(car as any).carImageUrl} alt="Авто" style={{ width: '120px', height: '80px', borderRadius: '12px', objectFit: 'cover' }} />
+                  <img src={(car as any).carImageUrl} alt="Авто" className={styles.carImage} />
                 )}
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div className={styles.carHeader}>
-                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
                       {formatCarName(car)}
                       {!(car as any).isVerified && (
-                        <span style={{ fontSize: '10px' }}>
+                        <span style={{ fontSize: '10px', display: 'inline-flex' }}>
                           <Badge variant="warning">На модерации</Badge>
                         </span>
                       )}
                     </h3>
-
-
                     <Badge variant={(car.status === 'available' ? 'success' : 'warning') as any}>{getCarStatusLabel(car.status)}</Badge>
                   </div>
                   <div className={styles.carDetails}>
-                    <span>{getFuelTypeLabel(car.fuelType)}</span> | <span>{getTransmissionLabel(car.transmission)}</span> | <span>{car.seats} мест</span>
+                    <span>{getFuelTypeLabel(car.fuelType)}</span>
+                    <span>{getTransmissionLabel(car.transmission)}</span>
+                    <span>{car.seats} мест</span>
                   </div>
                   <p className={styles.location}>{getLocationById(car.locationId)?.name || 'Не указана'}</p>
                   <div className={styles.carPrice}>{car.pricePerDay} ₽/день</div>
                 </div>
               </div>
-              <div className={styles.carActions} style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
+              <div className={styles.carActions}>
                 <Button size="sm" variant="secondary" onClick={() => handleOpenModal(car)}>Редактировать</Button>
                 <Button size="sm" variant="danger" onClick={() => confirm('Удалить автомобиль?') && deleteCar(car.id)}>Удалить</Button>
               </div>
@@ -208,7 +206,6 @@ export const MyCarsPage = observer(() => {
             {errors.locationId && <span className={styles.errorText}>{errors.locationId}</span>}
           </div>
 
-          {/* Поле интерактивной загрузки фото автомобиля */}
           <div className={styles.inputWrapper}>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>Фотография автомобиля</label>
             <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" style={{ display: 'none' }} />

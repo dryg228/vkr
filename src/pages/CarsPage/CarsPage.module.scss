@@ -1,10 +1,29 @@
 .page {
+  // Вырываем контент из сломанного контейнера Layout
+  position: fixed !important; 
+  top: 64px;    // Высота вашего хедера ($header-height)
+  left: 260px;  // Ширина вашего сайдбара ($sidebar-width)
+  right: 0 !important;
+  bottom: 0 !important;
+  
+  // Настраиваем внутреннюю прокрутку, так как position: fixed убирает нативную прокрутку body
+  overflow-y: auto !important; 
   padding: 40px 24px;
-  max-width: 1280px;
-  margin: 0 auto;
-  font-family: 'Inter', sans-serif;
   background: #f8fafc;
-  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+
+  // Контент внутри будет плавно растягиваться до правого края экрана
+  .header, .filters, .grid, .loading, .empty {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  @media (max-width: 1024px) { // Если сайдбар на планшетах/мобилках скрывается
+    left: 0 !important;
+    top: 64px;
+  }
 
   @media (max-width: 768px) {
     padding: 24px 16px;
@@ -17,6 +36,7 @@
   align-items: center;
   margin-bottom: 32px;
   gap: 16px;
+  width: 100%;
 
   @media (max-width: 576px) {
     flex-direction: column;
@@ -49,10 +69,18 @@
   box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
   align-items: center;
   flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
 
-  @media (max-width: 768px) {
+  @media (max-width: 992px) {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     padding: 16px;
     gap: 12px;
+  }
+
+  @media (max-width: 576px) {
+    grid-template-columns: 1fr;
   }
 
   .searchInput {
@@ -60,7 +88,12 @@
     min-width: 260px;
 
     @media (max-width: 992px) {
-      flex: 1 1 100%; // На планшетах поиск занимает всю ширину
+      grid-column: span 2;
+      width: 100%;
+    }
+
+    @media (max-width: 576px) {
+      grid-column: span 1;
     }
   }
 
@@ -75,10 +108,7 @@
     color: #334155;
     background: #f8fafc;
     transition: all 0.2s ease;
-
-    @media (max-width: 576px) {
-      flex: 1 1 100%; // На телефонах каждый фильтр встает друг под друга
-    }
+    width: 100%;
 
     &:focus {
       border-color: #2563eb;
@@ -88,33 +118,13 @@
   }
 }
 
-.page {
-  padding: 40px 24px;
-  max-width: 1280px;
-  margin: 0 auto;
-  font-family: 'Inter', sans-serif;
-  background: #f8fafc;
-  
-  // Растягивает страницу на всю высоту экрана за вычетом средних отступов
-  min-height: calc(100vh - 120px); 
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-
-  @media (max-width: 768px) {
-    padding: 24px 16px;
-    min-height: calc(100vh - 80px);
-  }
-}
-
-// Теперь блоки "Пусто" и "Загрузка" гибко занимают всё оставшееся пространство экрана
 .loading, .empty {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  padding: 40px 0;
+  padding: 60px 20px;
   font-size: 18px;
   color: #64748b;
   font-weight: 500;
@@ -122,20 +132,21 @@
   border-radius: 24px;
   border: 1px solid #f1f5f9;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.02);
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-
+// ИСПРАВЛЕНО: Сетка теперь адаптивно растягивается на всю ширину, заполняя пустоту справа
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 32px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); // Карточки будут автоматически расширяться, чтобы занять всё пустое место
+  gap: 24px;
+  width: 100%;
+  box-sizing: border-box;
 
   @media (max-width: 768px) {
     gap: 20px;
-  }
-  
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr; // Строго по одному авто на мобильных
   }
 }
 
@@ -148,8 +159,7 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  position: relative;
-  overflow: hidden;
+  box-sizing: border-box;
 
   @media (max-width: 768px) {
     padding: 20px;
@@ -157,10 +167,9 @@
   }
 
   &:hover {
-    @media (min-width: 769px) { // Эффект парения только для десктопов
-      transform: translateY(-8px);
-      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
-      border-color: #e2e8f0;
+    @media (min-width: 769px) { 
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.06);
     }
   }
 
@@ -168,32 +177,34 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     gap: 12px;
 
     .carName {
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 700;
       color: #0f172a;
+      margin: 0;
 
       @media (max-width: 768px) {
-        font-size: 19px;
+        font-size: 18px;
       }
     }
   }
 
   .carDetails {
     display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
+    gap: 6px;
+    margin-bottom: 16px;
     flex-wrap: wrap;
+    align-items: center;
 
     span {
       background: #f1f5f9;
       color: #475569;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 13px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
       font-weight: 600;
     }
   }
@@ -202,7 +213,7 @@
     font-size: 14px;
     color: #94a3b8;
     margin-top: auto;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -214,22 +225,14 @@
   }
 
   .carPrice {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 800;
     color: #2563eb;
     border-top: 1px solid #f1f5f9;
     padding-top: 16px;
 
     @media (max-width: 768px) {
-      font-size: 21px;
+      font-size: 20px;
     }
   }
-}
-
-.loading, .empty {
-  text-align: center;
-  padding: 80px 0;
-  font-size: 18px;
-  color: #64748b;
-  font-weight: 500;
 }

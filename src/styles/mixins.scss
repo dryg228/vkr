@@ -78,11 +78,13 @@
   flex-direction: column;
 }
 
+// ИСПРАВЛЕНО: Миксин контейнера теперь занимает 100% всей доступной области в Layout и центрируется без сдвигов
 @mixin container {
   width: 100%;
-  max-width: $container-xl;
+  max-width: 100%; // Позволяет страницам вроде каталога растягиваться полностью
   margin: 0 auto;
   padding: 0 $spacing-md;
+  box-sizing: border-box;
   
   @include tablet-up {
     padding: 0 $spacing-lg;
@@ -246,7 +248,7 @@
 
 @mixin card {
   background: $color-bg-primary;
-  border: 1px solid $color-border-light;
+  border: 1px solid #f1f5f9;
   border-radius: $radius-lg;
   box-shadow: $shadow-card;
   transition: all $transition-base;

@@ -1,13 +1,21 @@
 .page {
   padding: 40px 24px;
-  max-width: 1280px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
   font-family: 'Inter', sans-serif;
   background: #f8fafc;
-  min-height: 100vh;
+  min-height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  min-width: 0;
 
   @media (max-width: 768px) {
     padding: 24px 16px;
+    min-height: calc(100vh - 80px);
   }
 }
 
@@ -17,6 +25,7 @@
   align-items: center;
   margin-bottom: 32px;
   gap: 16px;
+  width: 100%;
 
   @media (max-width: 576px) {
     flex-direction: column;
@@ -41,11 +50,16 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 32px;
+  // Контролируем, чтобы карточки не сжимались слишком сильно, а переносились на новые ряды
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+  gap: 24px;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 
   @media (max-width: 768px) {
     gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   }
   
   @media (max-width: 480px) {
@@ -62,8 +76,9 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  position: relative;
-  overflow: hidden;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
 
   @media (max-width: 768px) {
     padding: 20px;
@@ -77,67 +92,102 @@
       border-color: #e2e8f0;
     }
   }
+}
 
-  .carHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 16px;
-    gap: 12px;
+// ДОБАВЛЕНО: Обертка содержимого карточки вместо инлайнового display: flex
+.carContent {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  flex-wrap: wrap; // Автоматический перенос текста под картинку при нехватке ширины!
 
-    h3 {
-      font-size: 22px;
-      font-weight: 700;
-      color: #0f172a;
-      margin: 0;
-
-      @media (max-width: 768px) {
-        font-size: 19px;
-      }
-    }
+  @media (max-width: 420px) {
+    flex-direction: column;
   }
+}
 
-  .carDetails {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
+// ДОБАВЛЕНО: Безопасное адаптивное управление картинкой
+.carImage {
+  width: 120px;
+  height: 85px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0; // Защищает картинку от сплющивания
 
-    span {
-      background: #f1f5f9;
-      color: #475569;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-    }
+  @media (max-width: 420px) {
+    width: 100%;
+    height: 140px;
   }
+}
 
-  .location {
-    font-size: 14px;
-    color: #94a3b8;
-    margin-top: auto;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    
-    &::before {
-      content: "📍";
-      font-size: 12px;
-    }
-  }
+.carHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 8px;
+  width: 100%;
 
-  .carPrice {
-    font-size: 24px;
-    font-weight: 800;
-    color: #2563eb;
-    border-top: 1px solid #f1f5f9;
-    padding-top: 16px;
+  h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    white-space: normal;
+    word-wrap: break-word;
+    word-break: break-all;
 
     @media (max-width: 768px) {
-      font-size: 21px;
+      font-size: 17px;
     }
+  }
+}
+
+.carDetails {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  width: 100%;
+
+  span {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+}
+
+.location {
+  font-size: 14px;
+  color: #94a3b8;
+  margin-top: auto;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  
+  &::before {
+    content: "📍";
+    font-size: 12px;
+  }
+}
+
+.carPrice {
+  font-size: 22px;
+  font-weight: 800;
+  color: #2563eb;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 16px;
+  width: 100%;
+
+  @media (max-width: 768px) {
+    font-size: 19px;
   }
 }
 
@@ -147,6 +197,7 @@
   margin-top: 20px;
   border-top: 1px solid #f1f5f9;
   padding-top: 20px;
+  width: 100%;
 
   @media (max-width: 480px) {
     flex-direction: column;
@@ -168,6 +219,7 @@
   flex-direction: column;
   gap: 20px;
   padding: 8px 4px;
+  width: 100%;
 
   .inputWrapper {
     display: flex;
@@ -190,6 +242,7 @@
   justify-content: flex-end;
   gap: 12px;
   margin-top: 12px;
+  width: 100%;
   
   @media (max-width: 480px) {
     flex-direction: column-reverse;
@@ -208,66 +261,13 @@
 }
 
 .loading, .empty {
-  text-align: center;
-  padding: 80px 0;
-  font-size: 18px;
-  color: #64748b;
-  font-weight: 500;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.page {
-  padding: 40px 24px;
-  max-width: 1280px;
-  margin: 0 auto;
-  font-family: 'Inter', sans-serif;
-  background: #f8fafc;
-  
-  // Растягивает страницу на всю высоту экрана за вычетом средних отступов
-  min-height: calc(100vh - 120px); 
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-
-  @media (max-width: 768px) {
-    padding: 24px 16px;
-    min-height: calc(100vh - 80px);
-  }
-}
-
-.page {
-  padding: 40px 24px;
-  max-width: 100%; // Позволяет контенту занять всю ширину
-  width: 100%;
-  margin: 0 auto;
-  font-family: 'Inter', sans-serif;
-  background: #f8fafc;
-  
-  // Растягиваем на всю высоту экрана
-  min-height: calc(100vh - 120px);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch; // ВАЖНО: заставляет всех детей растягиваться на 100% ширины
-  box-sizing: border-box;
-
-  @media (max-width: 768px) {
-    padding: 24px 16px;
-    min-height: calc(100vh - 80px);
-  }
-}
-
-.loading, .empty {
-  flex: 1; // Занимает всю оставшуюся высоту
-  width: 100%; // ВАЖНО: растягивает белую карточку на всю ширину страницы
+  flex: 1; 
+  width: 100%; 
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  padding: 40px;
+  padding: 60px 20px;
   font-size: 16px;
   color: #64748b;
   font-weight: 500;
@@ -275,5 +275,11 @@
   border-radius: 24px;
   border: 1px solid #f1f5f9;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.02);
-  box-sizing: border-box; // Защищает от вырезания паддингов за края экрана
+  box-sizing: border-box; 
+  text-align: center;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }

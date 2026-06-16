@@ -6,6 +6,10 @@
   display: flex;
   flex-direction: column;
   gap: $spacing-2xl;
+  
+  // ИСПРАВЛЕНО: Растягиваем главную страницу на всю ширину выделенного Layout пространства
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .welcome {
@@ -20,6 +24,10 @@
   position: relative;
   overflow: hidden;
   box-shadow: 0 16px 48px rgba($color-primary, 0.3);
+  
+  // ИСПРАВЛЕНО: Гарантируем растяжение плашки приветствия
+  width: 100%;
+  box-sizing: border-box;
 
   @include mobile {
     flex-direction: column;
@@ -71,6 +79,10 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: $spacing-lg;
+  
+  // ИСПРАВЛЕНО: Сетка статистики заполняет всю ширину
+  width: 100%;
+  box-sizing: border-box;
 
   @include tablet {
     grid-template-columns: repeat(2, 1fr);
@@ -88,12 +100,13 @@
   justify-content: center;
   text-align: center;
   gap: $spacing-md;
-
+  width: 100%; // Карточки занимают всю ширину ячейки грида
 
   padding: $spacing-lg $spacing-xl !important;
   border-radius: $radius-xl !important;
   background: linear-gradient(135deg, $color-bg-primary 0%, $color-bg-secondary 100%);
   transition: all $transition-smooth;
+  box-sizing: border-box;
 
   &:hover {
     transform: translateY(-6px);
@@ -155,7 +168,7 @@
   color: $color-text-primary;
 }
 
-.statTitle {
+.statContent .statTitle {
   font-size: $font-size-sm;
   color: $color-text-muted;
 }
@@ -169,12 +182,16 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  width: 100%;
 }
 
+// ИСПРАВЛЕНО: Карточки действий переведены на гибкий Flexbox для автоматического закрытия пустоты справа
 .actionCards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: $spacing-xl;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .actionCard {
@@ -185,6 +202,15 @@
   padding: $spacing-xl !important;
   border-radius: $radius-xl !important;
   transition: all $transition-smooth;
+  box-sizing: border-box;
+  
+  // Ключевое свойство: карточка будет расширяться до правого края экрана в ряду
+  flex: 1 1 300px;
+  max-width: 100%;
+
+  @media (max-width: 576px) {
+    flex: 1 1 100%;
+  }
 
   &:hover {
     transform: scale(1.02);

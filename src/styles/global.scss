@@ -120,8 +120,14 @@ body {
   @include visually-hidden;
 }
 
+// ИСПРАВЛЕНО: Принудительно отцентрировали главный контейнер приложения по центру экрана
 .container {
   @include container;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  width: 100%;
+  max-width: 1280px; 
+  box-sizing: border-box;
 }
 
 // ============================================
@@ -138,4 +144,30 @@ body {
 
 header[class*="header_"] div[class*="bottomBar_"] {
     display: none !important;
+}
+
+// ============================================
+// Принудительное устранение пустоты справа во всём приложении
+// ============================================
+
+// Находим главный контентный узел, куда рендерится CarsPage рядом с сайдбаром
+main, 
+.main, 
+[class*="main"], 
+[class*="content"], 
+[class*="pageContainer"] {
+  flex: 1 1 auto !important; // Заставляем блок занять 100% свободного места справа
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+// Перебиваем возможные поломки во внешней обёртке приложения
+#root, 
+body > div:first-child {
+  display: flex !important;
+  width: 100vw !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
 }
