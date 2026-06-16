@@ -51,7 +51,7 @@ export class AuthStore {
           
           runInAction(() => {
             const role: UserRole = firebaseUser.email === 'admin@gmail.com' ? 'admin' : 'owner';
-            const fallbackName = firebaseUser.email ? firebaseUser.email.split('@')[0] : 'Пользователь';
+            const fallbackName = firebaseUser.email ? firebaseUser.email.split('@') : 'Пользователь';
             const name = savedData?.name || firebaseUser.displayName || fallbackName;
 
             this._user = {
@@ -159,8 +159,8 @@ export class AuthStore {
       let imageUrl = (this._user as any).licenseImageUrl || '';
 
       if (file) {
-        // Конвертируем изображение в текст без использования Firebase Storage бакета
-        const base64Result = await FirebaseService.uploadFile('', file);
+        // ИСПРАВЛЕНО: Убран лишний первый аргумент пути, теперь передается только file
+        const base64Result = await FirebaseService.uploadFile(file);
         if (base64Result) {
           imageUrl = base64Result;
         } else {
