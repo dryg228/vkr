@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { dataStore, authStore, navigationStore } from '@/store';
-import { Card, Button, Input, Select, Badge } from '@/components/UI';
+import { Card, Button, Input, Select, Badge, Modal } from '@/components/UI';
 import { formatCarName } from '@/types';
 import styles from './CarsPage.module.scss';
 
@@ -10,7 +10,9 @@ export const CarsPage = observer(() => {
   const { isAuthenticated, userId, isAdmin, user } = authStore; 
   const [searchValue, setSearchValue] = useState('');
 
-  // Эффект задержки (Debounce) для поисковой строки
+  // Состояние для открытия полноразмерного превью фотографии авто
+  const [selectedPreviewImage, setSelectedPreviewImage] = useState<string | null>(null);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setFilter('search', searchValue || undefined);
@@ -31,7 +33,6 @@ export const CarsPage = observer(() => {
     { value: 'all', label: 'Все локации' }, ...activeLocations.map(l => ({ value: l.id, label: l.name }))
   ];
 
-  // Фильтрация: Показываем только активные, доступные И ПОДТВЕРЖДЕННЫЕ автомобили, кроме собственных
   const displayCars = filteredCars.filter(car => {
     const isAvailable = (car.isActive ?? true) && car.status === 'available';
     const isNotMine = (car as any).ownerId !== userId;
@@ -61,8 +62,8 @@ export const CarsPage = observer(() => {
         <div className={styles.grid}>
           {displayCars.map(car => (
             <Card key={car.id} className={styles.carCard}>
-              {/* ДОБАВЛЕНО: Блок вывода полноценной фотографии автомобиля сверху карточки */}
-              <div style={{ width: '100%', height: '180px', borderRadius: '16px', overflow: 'hidden', background: '#f8fafc', marginBottom: '16px', border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {/* ОБНОВЛЕНО: Добавлен курсор pointer и событие клика для открытия большого фото */}
+              <div style={{ width: '100%', height: '180px', borderRadius: '16px', overflow: 'hidden', background: '#f8fafc', marginBottom: '16px', border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: (car as any).carImageUrl ? 'pointer' : 'default' }} onClick={() => (car as any).carImageUrl && setSelectedPreviewImage((car as any).carImageUrl)}>
                 {(car as any).carImageUrl ? (
                   <img 
                     src={(car as any).carImageUrl} 
@@ -126,6 +127,22 @@ export const CarsPage = observer(() => {
           ))}
         </div>
       )}
+
+      {/* ДОБАВЛЕНО: Модальное окно для просмотра полноразмерной фотографии автомобиля */}
+      <Modal isOpen={!!selectedPreviewImage} onClose={() => setSelectedPreviewImage(null)} title="Просмотр автомобиля">
+        <div style={{ textAlign: 'center', padding: '10px' }}>
+          {selectedPreviewImage && (
+            <img 
+              src={selectedPreviewImage} 
+              alt="Автомобиль крупным планом" 
+              style={{ maxWidth: '100%', maxHeight: '70vh', borderRadius: '12px', border: '1px solid #e2e8f0', objectFit: 'contain' }} 
+            />
+          )}
+          <div style={{ marginTop: '20px' }}>
+            <Button variant="secondary" onClick={() => setSelectedPreviewImage(null)}>Закрыть</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 });
