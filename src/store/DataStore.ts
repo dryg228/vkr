@@ -9,6 +9,7 @@ export class DataStore {
   rentals: Rental[] = [];
   locations: Location[] = [];
   reviews: Review[] = [];
+  usersList: Record<string, any> = {};
 
   carsLoading = false;
   rentalsLoading = false;
@@ -38,7 +39,11 @@ export class DataStore {
     return result.sort((a, b) => a.brand.localeCompare(b.brand, 'ru'));
   }
 
-  get activeCars(): Car[] { return this.cars.filter(c => c.isActive && c.status === 'available'); }
+  // ОБНОВЛЕНО: Свободные и строго верифицированные админом машины для аренды
+  get activeCars(): Car[] { 
+    return this.cars.filter(c => c.isActive && c.status === 'available' && (c as any).isVerified === true); 
+  }
+  
   get activeLocations(): Location[] { return this.locations.filter(l => l.isActive).sort((a, b) => a.name.localeCompare(b.name, 'ru')); }
   get activeRentals(): Rental[] { return this.rentals.filter(r => r.status !== 'cancelled' && r.status !== 'completed'); }
 
@@ -56,8 +61,18 @@ export class DataStore {
       this.loadCars(), 
       this.loadRentals(), 
       this.loadReviews(), 
-      this.loadBrandTemplates()
+      this.loadBrandTemplates(),
+      this.loadUsers()
     ]);
+  }
+
+  async loadUsers(): Promise<void> {
+    try {
+      const data = await FirebaseService.getData<Record<string, any>>('users');
+      runInAction(() => { this.usersList = data || {}; });
+    } catch (error) {
+      console.error('Ошибка загрузки пользователей в DataStore:', error);
+    }
   }
 
   async loadBrandTemplates(): Promise<void> {
@@ -78,8 +93,6 @@ export class DataStore {
     } catch (error) {
       console.error('Ошибка загрузки шаблонов:', error);
     } finally {
-
-      
       runInAction(() => { this.templatesLoading = false; });
     }
   }
@@ -121,8 +134,6 @@ export class DataStore {
       });
     } catch (error) {
       console.error(error);
-      runInAction(() => { this.error = 'Ошибка загрузки локаций'; });
-    } finally {
       runInAction(() => { this.locationsLoading = false; });
     }
   }
@@ -136,27 +147,47 @@ export class DataStore {
     }
   }
 
-    async createCar(data: CarFormData): Promise<Car | null> {
+    async createCar(data: CarFormData & { carImageUrl?: string }): Promise<Car | null> {
     if (!authStore.canManageCars()) return null;
     const now = new Date().toISOString();
-    const car: Car = { id: uuidv4(), ...data, ownerId: authStore.currentRole, status: 'available', isActive: true, createdAt: now, updatedAt: now };
+    
+    const car = { 
+      id: uuidv4(), 
+      ...data, 
+      ownerId: authStore.userId, 
+      status: 'available', 
+      isActive: true, 
+      isVerified: false, // Все новые машины по умолчанию уходят на модерацию
+      createdAt: now, 
+      updatedAt: now 
+    };
+    
     try {
       await FirebaseService.setData(`cars/${car.id}`, car);
-      runInAction(() => { this.cars.push(car); });
-      return car;
+      runInAction(() => { this.cars.push(car as any); });
+      return car as any;
     } catch (error) { 
       console.error('Create car error:', error); 
       return null; 
     }
   }
 
-  async updateCar(id: string, data: Partial<CarFormData> & { status?: string }): Promise<boolean> {
+  // ИСПРАВЛЕНО: Теперь метод принимает любые дополнительные свойства, включая isVerified
+  async updateCar(id: string, data: Partial<CarFormData> & { status?: string; carImageUrl?: string; isVerified?: boolean }): Promise<boolean> {
     const index = this.cars.findIndex(c => c.id === id);
     if (index === -1) return false;
-    const updated = { ...this.cars[index], ...data, updatedAt: new Date().toISOString() };
+    
+    const updated = { 
+      ...this.cars[index], 
+      ...data, 
+      updatedAt: new Date().toISOString() 
+    };
+    
     try {
       await FirebaseService.setData(`cars/${id}`, updated);
-      runInAction(() => { this.cars.splice(index, 1, updated as Car); });
+      runInAction(() => { 
+        this.cars.splice(index, 1, updated as Car); 
+      });
       return true;
     } catch (error) { 
       console.error('Update car error:', error); 
@@ -190,7 +221,7 @@ export class DataStore {
       id: uuidv4(), 
       carId: data.carId, 
       carName: formatCarName(car), 
-      renterId: authStore.currentRole, 
+      renterId: authStore.userId, 
       renterName: data.renterName, 
       startDate: data.startDate, 
       endDate: data.endDate, 
@@ -204,6 +235,8 @@ export class DataStore {
     
     try {
       await FirebaseService.setData(`rentals/${rental.id}`, rental);
+      await this.updateCar(data.carId, { status: 'rented' });
+
       runInAction(() => { this.rentals.push(rental); });
       return rental;
     } catch (error) { 
@@ -211,6 +244,8 @@ export class DataStore {
       return null; 
     }
   }
+
+  
 
   async updateRentalStatus(id: string, status: Rental['status']): Promise<boolean> {
     const index = this.rentals.findIndex(r => r.id === id);
@@ -294,5 +329,7 @@ export class DataStore {
     }
   }
 }
+
+
 
 export const dataStore = new DataStore();

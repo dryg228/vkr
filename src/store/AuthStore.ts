@@ -7,11 +7,11 @@ import {
   updateProfile 
 } from 'firebase/auth';
 import { auth } from '@/firebase';
-import FirebaseService from '../firebase';
+import FirebaseService from '@/firebase';
 import { User, UserRole, ROLE_PERMISSIONS, RolePermissions } from '@/types';
 
 export class AuthStore {
-  private _user: User = { role: 'guest' };
+  private _user: User & { id?: string } = { id: '', role: 'guest' };
   loginModalOpen = false;
   loginError: string | null = null;
   isLoading = false;
@@ -21,12 +21,13 @@ export class AuthStore {
     this.initAuthListener();
   }
 
-  get user(): User { return this._user; }
+  get user(): User & { id?: string } { return this._user; }
   get isAuthenticated(): boolean { return this._user.role !== 'guest'; }
   get isOwner(): boolean { return this._user.role === 'owner' || this._user.role === 'admin'; }
   get isAdmin(): boolean { return this._user.role === 'admin'; }
   get permissions(): RolePermissions { return ROLE_PERMISSIONS[this._user.role]; }
   get currentRole(): UserRole { return this._user.role; }
+  get userId(): string { return this._user.id || ''; }
 
   canViewCars = (): boolean => this.permissions.canViewCars;
   canViewRentals = (): boolean => this.permissions.canViewRentals;
@@ -46,27 +47,29 @@ export class AuthStore {
     onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          // Получаем сохраненные данные пользователя из базы данных
           const savedData = await FirebaseService.getData<any>(`users/${firebaseUser.uid}`);
           
           runInAction(() => {
-            // СТРОГАЯ ПРОВЕРКА: Роль 'admin' присваивается ТОЛЬКО для admin@gmail.com
             const role: UserRole = firebaseUser.email === 'admin@gmail.com' ? 'admin' : 'owner';
-            
             const fallbackName = firebaseUser.email ? firebaseUser.email.split('@')[0] : 'Пользователь';
             const name = savedData?.name || firebaseUser.displayName || fallbackName;
 
             this._user = {
+              id: firebaseUser.uid,
               role: savedData?.role || role,
               email: firebaseUser.email || '',
-              name: name
+              name: name,
+              licenseNumber: savedData?.licenseNumber || '',
+              licenseDate: savedData?.licenseDate || '',
+              licenseImageUrl: savedData?.licenseImageUrl || '', 
+              isVerified: savedData?.isVerified ?? false
             } as any; 
           });
         } catch (error) {
           console.error('Ошибка профиля:', error);
           runInAction(() => {
-            // Дублируем строгую проверку в блок catch на случай сбоя БД
             this._user = {
+              id: firebaseUser.uid,
               role: firebaseUser.email === 'admin@gmail.com' ? 'admin' : 'owner',
               email: firebaseUser.email || '',
               name: firebaseUser.displayName || 'Пользователь'
@@ -75,7 +78,7 @@ export class AuthStore {
         }
       } else {
         runInAction(() => {
-          this._user = { role: 'guest' };
+          this._user = { id: '', role: 'guest' };
         });
       }
     });
@@ -88,17 +91,11 @@ export class AuthStore {
     this.isLoading = true;
     this.loginError = null;
     try {
-      // 1. Создаем аккаунт в Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
 
       if (firebaseUser) {
-        // Записываем введенное имя в стандартный профиль Firebase Auth
-        await updateProfile(firebaseUser, {
-          displayName: name.trim()
-        });
-
-        // СТРОГАЯ ПРОВЕРКА: При записи нового пользователя в БД админом станет только admin@gmail.com
+        await updateProfile(firebaseUser, { displayName: name.trim() });
         const role: UserRole = email.trim() === 'admin@gmail.com' ? 'admin' : 'owner';
 
         const userData = {
@@ -106,11 +103,27 @@ export class AuthStore {
           email: email,
           name: name.trim(),
           role: role,
+          licenseNumber: '',
+          licenseDate: '',
+          licenseImageUrl: '', 
+          isVerified: false,
           createdAt: new Date().toISOString()
         };
 
-        // 2. Сохраняем имя и роль в базу данных Realtime Database
         await FirebaseService.setData(`users/${firebaseUser.uid}`, userData);
+        
+        runInAction(() => {
+          this._user = {
+            id: firebaseUser.uid,
+            role: role,
+            email: email,
+            name: name.trim(),
+            licenseNumber: '',
+            licenseDate: '',
+            licenseImageUrl: '',
+            isVerified: false
+          } as any;
+        });
       }
 
       this.closeLoginModal();
@@ -118,7 +131,7 @@ export class AuthStore {
     } catch (error: any) {
       runInAction(() => { this.loginError = error.message || 'Ошибка регистрации'; });
       return false;
-    } finally {
+    } finally { 
       runInAction(() => { this.isLoading = false; });
     }
   };
@@ -138,10 +151,48 @@ export class AuthStore {
     }
   };
 
+  // Метод сохранения прав с конвертацией в текстовую Base64-строку для Realtime Database
+  updateDriverLicense = async (licenseNumber: string, licenseDate: string, file?: File): Promise<boolean> => {
+    if (!this.isAuthenticated || this.isAdmin) return false;
+    this.isLoading = true;
+    try {
+      let imageUrl = (this._user as any).licenseImageUrl || '';
+
+      if (file) {
+        // Конвертируем изображение в текст без использования Firebase Storage бакета
+        const base64Result = await FirebaseService.uploadFile('', file);
+        if (base64Result) {
+          imageUrl = base64Result;
+        } else {
+          throw new Error('Не удалось обработать изображение.');
+        }
+      }
+
+      const updatedData = {
+        ...this._user,
+        licenseNumber: licenseNumber.trim(),
+        licenseDate: licenseDate,
+        licenseImageUrl: imageUrl, 
+        isVerified: false
+      };
+
+      await FirebaseService.setData(`users/${this.userId}`, updatedData);
+      
+      runInAction(() => { this._user = updatedData as any; });
+      return true;
+    } catch (error: any) {
+      console.error('Ошибка сохранения прав в AuthStore:', error);
+      alert(error.message || 'Не удалось сохранить данные.');
+      return false;
+    } finally {
+      runInAction(() => { this.isLoading = false; });
+    }
+  };
+
   logout = async (): Promise<void> => {
     try {
       await signOut(auth);
-      runInAction(() => { this._user = { role: 'guest' }; this.loginError = null; });
+      runInAction(() => { this._user = { id: '', role: 'guest' }; this.loginError = null; });
     } catch (error) {
       console.error('Logout error:', error);
     }

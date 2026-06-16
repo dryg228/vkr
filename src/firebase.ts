@@ -15,12 +15,9 @@ const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
 export const auth = getAuth(app);
 
-// Полностью автономный сервис работы с корнем Firebase Realtime Database
 export class FirebaseService {
   static async getData<T = unknown>(path: string): Promise<T | null> {
-    // Если путь пустой, создаем ссылку на корень базы, иначе на вложенный узел
     const dataRef = path ? ref(db, path) : ref(db);
-    
     return new Promise<T | null>((resolve) => {
       onValue(dataRef, (snapshot) => {
         resolve(snapshot.val() as T | null);
@@ -42,6 +39,21 @@ export class FirebaseService {
     const dataRef = path ? ref(db, path) : ref(db);
     const snapshot = await get(dataRef);
     return snapshot.val() as T | null;
+  }
+
+  // ПОЛНОСТЬЮ БЕСПЛАТНЫЙ МЕТОД: Конвертирует фото в текст и возвращает его для сохранения в Realtime Database
+  static async uploadFile(path: string, file: File): Promise<string | null> {
+    try {
+      return await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file); // Читаем файл как DataURL (Base64 текстовая строка)
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (error) => reject(error);
+      });
+    } catch (error) {
+      console.error('Ошибка конвертации файла в текст:', error);
+      return null;
+    }
   }
 }
 
