@@ -1,9 +1,13 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
 .page {
   display: flex;
   flex-direction: column;
   gap: 32px;
-  width: 100% !important; // Растягивается на 100% области, которую выделил <main>
-  max-width: 100% !important; // Убираем ограничение в 1200px, чтобы убрать серое поле справа
+  width: 100% !important; 
+  max-width: 100% !important; 
   padding: 40px;
   background: #f8fafc;
   box-sizing: border-box;
@@ -13,7 +17,6 @@
     gap: 24px;
   }
 }
-
 
 .header {
   display: flex;
@@ -45,6 +48,7 @@
   }
 }
 
+// ФИКС ФИЛЬТРОВ: Идеально ровное выравнивание всех дочерних блоков по центру их оси
 .filters {
   display: flex;
   gap: 20px;
@@ -53,7 +57,7 @@
   padding: 24px;
   border-radius: 20px;
   box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
-  align-items: flex-end; // Выравнивает инпуты по нижней линии, если лейблы разной длины
+  align-items: center; // ФИКС: Выравниваем все блоки по центру по вертикали
   flex-wrap: wrap;
   width: 100%;
   box-sizing: border-box;
@@ -70,9 +74,14 @@
     grid-template-columns: 1fr;
   }
 
-  select, :global(.ui-select) {
+  // Принудительно задаем одинаковую высоту для инпутов, селекторов и обертки локации
+  select, input, :global(.ui-select), :global(.ui-input), .locationWrapper {
     width: 100%;
     height: 48px;
+    box-sizing: border-box;
+  }
+
+  select, :global(.ui-select) {
     border-radius: 12px;
     border: 1px solid #e2e8f0;
     padding: 0 16px;
@@ -80,7 +89,6 @@
     color: #334155;
     background: #f8fafc;
     transition: all 0.2s ease;
-    box-sizing: border-box;
 
     &:focus {
       border-color: #2563eb;
@@ -90,11 +98,10 @@
   }
 }
 
-// Новый контейнер, связывающий надпись и элемент меню в один вертикальный блок
 .filterGroup {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px; // Одинаковый отступ от лейбла до инпута
   flex: 1;
   min-width: 180px;
   width: 100%;
@@ -118,7 +125,6 @@
   }
 }
 
-// Текстовая надпись над выпадающим меню
 .filterLabel {
   font-size: 13px;
   font-weight: 600;
@@ -134,8 +140,16 @@
 
 .locationWrapper {
   width: 100%;
+  display: flex;
+  align-items: center;
+
+  // Если внутри LocationDropdown есть свой кастомный селект или инпут, растягиваем его
+  & > div, & > select, & > input {
+    width: 100%;
+    height: 100%;
+  }
 }
-// Системные состояния (загрузка и пустой каталог)
+
 .loading, .empty {
   flex: 1;
   display: flex;
@@ -155,10 +169,9 @@
   box-sizing: border-box;
 }
 
-// Сетка адаптивно растягивается на всю ширину, заполняя пустоту справа
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); // Авторасширение карточек под пустое место
+  grid-template-columns: repeat(auto-fill, minmax(285px, 1fr));
   gap: 24px;
   width: 100%;
   box-sizing: border-box;
@@ -168,6 +181,7 @@
   }
 }
 
+// КАРТОЧКА АВТОМОБИЛЯ И ЕЁ ВНУТРЕННИЕ ЭЛЕМЕНТЫ
 .carCard {
   background: #ffffff;
   border-radius: 24px;
@@ -177,9 +191,10 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  align-items: center; // ИСПРАВЛЕНО: Центрирует все дочерние элементы по горизонтали
-  text-align: center;  // ИСПРАВЛЕНО: Центрирует текст внутри параграфов и заголовков
+  align-items: center; 
+  text-align: center;  
   box-sizing: border-box;
+  width: 100%;
 
   &:hover {
     @media (min-width: 769px) { 
@@ -188,15 +203,14 @@
     }
   }
 
-  // Контейнер фотографии — оставляем по центру
-    // ИСПРАВЛЕНО: Фотография автомобиля теперь идеально квадратная
+  // ФИКС ЦЕНТРИРОВАНИЯ ИЗОБРАЖЕНИЯ (Вернули внутрь .carCard)
   .imageContainer {
-    width: 240px;          // Фиксированная ширина квадрата
-    height: 240px;         // Такая же высота для пропорции 1:1
-    border-radius: 20px;   // Красивое современное скругление углов
+    width: 240px;          
+    height: 240px;         
+    border-radius: 20px;   
     overflow: hidden;
     background: #f8fafc;
-    margin-bottom: 20px;   // Оптимальный отступ до названия
+    margin: 0 auto 20px auto; // Магический маргин центрирует контейнер идеально
     border: 1px solid #f1f5f9;
     display: flex;
     align-items: center;
@@ -205,24 +219,22 @@
     transition: transform 0.2s ease;
 
     &:hover {
-      transform: scale(1.02); // Эффект легкого увеличения при наведении на фото
+      transform: scale(1.02); 
     }
 
     @media (max-width: 480px) {
-      width: 180px;        // Чуть уменьшаем квадрат на маленьких смартфонах
-      height: 180px;
+      width: 100%;  // На маленьких телефонах растягивается по ширине карточки
+      max-width: 220px;
+      height: 220px;
     }
   }
 
-  // Стили для самой картинки внутри контейнера
   .carImage {
     width: 100%;
     height: 100%;
-    object-fit: cover;     // Картинка заполняет квадрат без искажений и растягивания
+    object-fit: cover; 
   }
 
-
-  // ИСПРАВЛЕНО: Вертикальный поток шапки для центрирования названия и бейджа
   .carHeader {
     display: flex;
     flex-direction: column;
@@ -239,7 +251,6 @@
     }
   }
 
-  // ИСПРАВЛЕНО: Блок рейтинга по центру
   .ratingBlock {
     display: flex;
     align-items: center;
@@ -250,14 +261,13 @@
     font-weight: 600;
   }
 
-  // ИСПРАВЛЕНО: Характеристики по центру
   .carDetails {
     display: flex;
     gap: 6px;
     margin-bottom: 16px;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: center; // Центрирует теги
+    justify-content: center; 
 
     span {
       background: #f1f5f9;
@@ -276,7 +286,7 @@
     margin-bottom: 6px;
     display: flex;
     align-items: center;
-    justify-content: center; // ИСПРАВЛЕНО: Иконка и адрес по центру
+    justify-content: center; 
     gap: 6px;
     font-weight: 500;
   }
@@ -288,8 +298,6 @@
     font-weight: 500;
     text-align: center;
     width: 100%;
-    
-    // Если ID владельца слишком длинный, он аккуратно сократится по центру
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap; 
@@ -309,8 +317,40 @@
     margin-top: 16px;
     width: 100%;
   }
-}
 
+  .bookedDatesBlock {
+    width: 100%;
+    background: #f8fafc;
+    padding: 10px;
+    border-radius: 12px;
+    margin: 8px 0;
+    border: 1px solid #e2e8f0;
+    font-size: 12px;
+    text-align: center;
+    box-sizing: border-box;
+  }
+
+  .bookedDatesTitle {
+    color: #64748b;
+    display: block;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+  }
+
+  .dateActiveTrip {
+    color: #ef4444; 
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .dateBooked {
+    color: #f59e0b; 
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+}
 
 // Модальное окно просмотра оригинального изображения
 .modalContent {
@@ -328,38 +368,3 @@
 .modalActions {
   margin-top: 20px;
 }
-
-// Стилизация встроенного календаря забронированных дат
-.bookedDatesBlock {
-  width: 100%;
-  background: #f8fafc;
-  padding: 10px;
-  border-radius: 12px;
-  margin: 8px 0;
-  border: 1px solid #e2e8f0;
-  font-size: 12px;
-  text-align: center;
-  box-sizing: border-box;
-}
-
-.bookedDatesTitle {
-  color: #64748b;
-  display: block;
-  margin-bottom: 4px;
-  text-transform: uppercase;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-}
-
-.dateActiveTrip {
-  color: #ef4444; // Яркий красный для машин, которые сейчас едут по трассе
-  font-weight: 600;
-  margin-bottom: 2px;
-}
-
-.dateBooked {
-  color: #f59e0b; // Насыщенный янтарный для одобренных будущих аренд
-  font-weight: 600;
-  margin-bottom: 2px;
-}
-

@@ -11,8 +11,6 @@ export const CarsPage = observer(() => {
   const { filteredCars, locations, carsLoading, setFilter, getLocationById } = dataStore;
   const { userId } = authStore;
   const [searchValue, setSearchValue] = useState('');
-
-  // Состояние для открытия полноразмерного превью фотографии авто
   const [selectedPreviewImage, setSelectedPreviewImage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,11 +29,9 @@ export const CarsPage = observer(() => {
     { value: 'all', label: 'Любая КПП' }, { value: 'manual', label: 'Механика' }, { value: 'automatic', label: 'Автомат' }
   ];
 
-  // СИНХРОНИЗИРОВАНО: Машина больше не исчезает во время поездок (убрано ограничение status === 'available')
   const displayCars = filteredCars.filter(car => {
     const isNotMine = (car as any).ownerId !== userId;
     const isCarVerified = (car as any).isVerified === true;
-
     return (car.isActive ?? true) && isNotMine && isCarVerified;
   });
 
@@ -48,7 +44,6 @@ export const CarsPage = observer(() => {
       </div>
 
       <div className={styles.filters}>
-        {/* Текстовый поиск */}
         <div className={styles.filterGroup}>
           <label className={styles.filterLabel}>Поиск автомобиля</label>
           <Input 
@@ -59,7 +54,6 @@ export const CarsPage = observer(() => {
           />
         </div>
 
-        {/* Выбор локации */}
         <div className={styles.filterGroup}>
           <label className={styles.filterLabel}>Выбор локации</label>
           <div className={styles.locationWrapper}>
@@ -72,7 +66,6 @@ export const CarsPage = observer(() => {
           </div>
         </div>
 
-        {/* Выбор типа двигателя */}
         <div className={styles.filterGroup}>
           <label className={styles.filterLabel}>Тип двигателя</label>
           <Select 
@@ -82,7 +75,6 @@ export const CarsPage = observer(() => {
           />
         </div>
 
-        {/* Выбор коробки передач */}
         <div className={styles.filterGroup}>
           <label className={styles.filterLabel}>Коробка передач</label>
           <Select 
@@ -92,6 +84,7 @@ export const CarsPage = observer(() => {
           />
         </div>
       </div>
+
       {displayCars.length === 0 ? (
         <div className={styles.empty}>Автомобили не найдены</div>
       ) : (
@@ -115,7 +108,6 @@ export const CarsPage = observer(() => {
                 </Badge>
               </div>
 
-              {/* Расчёт рейтинга звезд */}
               {(() => {
                 const { rating, count } = dataStore.getCarRatingInfo(car.id);
                 return (
@@ -127,12 +119,11 @@ export const CarsPage = observer(() => {
               })()}
 
               <div className={styles.carDetails}>
-                <span>{car.fuelType === 'petrol' ? 'Бензин' : car.fuelType === 'diesel' ? 'Дизель' : car.fuelType === 'electric' ? 'Электро' : 'Гибрид'}</span> |
-                <span> {car.transmission === 'manual' ? 'Механика' : 'Автомат'}</span> |
-                <span> {car.seats} мест</span>
+                <span>{car.fuelType === 'petrol' ? 'Бензин' : car.fuelType === 'diesel' ? 'Дизель' : car.fuelType === 'electric' ? 'Электро' : 'Гибрид'}</span>
+                <span>{car.transmission === 'manual' ? 'Механика' : 'Автомат'}</span>
+                <span>{car.seats} мест</span>
               </div>
 
-              {/* ВСТАВЛЕНО: Список забронированных дней выводится здесь в чистых CSS-классах */}
               {(() => {
                 const bookedDates = dataStore.getCarBookedDates(car.id);
                 if (bookedDates.length === 0) return null;

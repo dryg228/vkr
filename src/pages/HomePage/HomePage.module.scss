@@ -7,8 +7,6 @@
   flex-direction: column;
   gap: $spacing-2xl;
   
-  // ИСПРАВЛЕНО: Полностью убраны ограничения max-width и margin: 0 auto.
-  // Теперь страница нативно занимает 100% всей доступной ширины справа от сайдбара.
   width: 100% !important;
   max-width: 100% !important;
   margin: 0 !important;
@@ -16,7 +14,6 @@
   background: #f8fafc;
   box-sizing: border-box;
 
-  // Гарантируем, что все внутренние секции растягиваются на всю доступную ширину
   .welcome, .stats, .quickActions, .actionCards {
     width: 100% !important;
     max-width: 100% !important;
@@ -66,7 +63,7 @@
 
 .welcomeTitle {
   font-family: $font-family-primary;
-  font-size: clamp(24px, 4vw, 40px); // Плавное масштабирование шрифта под любой размер дисплея
+  font-size: clamp(24px, 4vw, 40px); 
   font-weight: $font-weight-bold;
   margin: 0 0 $spacing-md;
   line-height: 1.2;
@@ -101,30 +98,30 @@
   }
 
   @media (max-width: 768px) {
-    display: none; // Скрываем декоративные круги на смартфонах
+    display: none; 
   }
 }
 
 .stats {
   display: grid;
-  // ИСПРАВЛЕНО: Теперь карточки выстраиваются в один ровный ряд на ПК и красиво тянутся
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: $spacing-lg;
   width: 100%;
   box-sizing: border-box;
 
   @media (max-width: 576px) {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); // Компактная сетка на смартфонах
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
     gap: $spacing-md;
   }
 }
 
+// ФИКС ЦЕНТРИРОВАНИЯ: Принудительно заставляем карточку выравнивать всё по центру
 .statCard {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;     // Выравнивает внутренние элементы строго по центру
+  justify-content: center !important;
+  text-align: center !important;
   gap: $spacing-sm;
   width: 100%;
   padding: 24px !important;
@@ -145,7 +142,6 @@
     border-radius: $radius-lg !important;
   }
 
-  // Цветовые модификаторы и градиенты иконок
   &.primary .statIcon {
     background: linear-gradient(135deg, $color-primary, $color-primary-dark);
     color: $color-text-inverse;
@@ -167,6 +163,7 @@
   }
 }
 
+// Контейнер иконки теперь центрируется нативно
 .statIcon {
   display: flex;
   align-items: center;
@@ -174,11 +171,12 @@
   width: 52px;
   height: 52px;
   border-radius: $radius-lg;
-  margin-bottom: 4px;
+  margin: 0 auto 4px auto; // ФИКС: Авто-маргины по бокам центрируют квадрат на 100%
 
   svg {
     width: 24px;
     height: 24px;
+    display: block;
   }
 
   @media (max-width: 576px) {
@@ -241,7 +239,6 @@
   transition: all $transition-smooth;
   box-sizing: border-box;
   
-  // Карточки будут автоматически расширяться, заполняя всю ширину экрана на ПК
   flex: 1 1 280px;
   max-width: 100%;
 
@@ -251,7 +248,7 @@
   }
 
   @media (max-width: 576px) {
-    flex: 1 1 100%; // В мобильной версии карточки встают друг под друга
+    flex: 1 1 100%; 
     padding: 20px !important;
   }
 

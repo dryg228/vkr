@@ -13,7 +13,7 @@ type AdminTab = 'cars' | 'locations' | 'rentals' | 'users';
 export const AdminPage = observer(() => {
   const { currentPage } = navigationStore;
   const { 
-    cars, rentals, locations, createLocation, updateLocation, 
+    cars, rentals, locations, updateLocation, 
     deleteLocation, deleteCar, deleteRental, getLocationById, updateRentalStatus  
   } = dataStore;
 
@@ -36,7 +36,6 @@ export const AdminPage = observer(() => {
   const [formData, setFormData] = useState<LocationFormData & { description?: string }>({ name: '', address: '', city: '', description: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Стейты администрирования вкладок аренды и календаря конфликтов
   const [rentalStatusFilter, setRentalStatusFilter] = useState<string>('pending');
   const [selectedRental, setSelectedRental] = useState<Rental | null>(null);
   const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
@@ -54,14 +53,6 @@ export const AdminPage = observer(() => {
       loadUsers();
     }
   }, [activeTab, loadUsers]);
-
-  const formatDateToLocalString = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
   const getConflictsCountForDate = (carId: string, date: Date, currentRentalId: string) => {
     const check = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     check.setHours(0, 0, 0, 0);
@@ -106,16 +97,14 @@ export const AdminPage = observer(() => {
     setIsConflictModalOpen(false);
     setSelectedRental(null);
   };
+
   const handleOpenModal = (location?: LocationType) => {
     if (location) { 
       setEditingLocation(location); 
       setFormData({ name: location.name, address: location.address, city: location.city, description: location.description || '' }); 
-    } else { 
-      setEditingLocation(null); 
-      setFormData({ name: '', address: '', city: '', description: '' }); 
+      setIsModalOpen(true);
     }
     setErrors({}); 
-    setIsModalOpen(true);
   };
 
   const handleSubmit = async () => { 
@@ -126,30 +115,39 @@ export const AdminPage = observer(() => {
 
     if (Object.keys(newErrors).length > 0) return setErrors(newErrors);
 
-    if (editingLocation) await updateLocation(editingLocation.id, formData); 
-    else await createLocation(formData); 
-    
+    if (editingLocation) {
+      await updateLocation(editingLocation.id, formData); 
+    }
     setIsModalOpen(false); 
   };
-  
-  const handleDeleteLocation = async (id: string) => { 
-    if (confirm('Вы уверены, что хотите навсегда удалить эту локацию из базы данных?')) {
-      await deleteLocation(id); 
+
+  // Автоматическое удаление локации при удалении автомобиля
+  const handleDeleteCar = async (id: string) => { 
+    const carToDelete = cars.find(c => c.id === id);
+    if (confirm('Удалить автомобиль? Вместе с ним будет автоматически удалена привязанная локация.')) {
+      const associatedLocationId = carToDelete?.locationId;
+      
+      await deleteCar(id); 
+      
+      if (associatedLocationId) {
+        try {
+          await deleteLocation(associatedLocationId);
+        } catch (e) {
+          console.error('Ошибка автоматического удаления локации:', e);
+        }
+      }
     }
   };
-  
-  const handleDeleteCar = async (id: string) => { if (confirm('Удалить автомобиль?')) await deleteCar(id); };
+
   const handleDeleteRental = async (id: string) => { if (confirm('Удалить заявку на аренду?')) await deleteRental(id); };
 
   const handleRentalStatusChange = async (id: string, status: any) => {
     try { await updateRentalStatus(id, status); } catch (e) { console.error('Ошибка изменения статуса аренды:', e); }
   };
-
   const handleApproveCarVerification = async (carId: string) => {
     try { await dataStore.updateCar(carId, { isVerified: true }); } catch (e) { console.error('Ошибка верификации автомобиля:', e); }
   };
 
-  // ИСПРАВЛЕНО: При отклонении полностью сбрасываем верификацию, очищаем госномер и картинку
   const handleRejectCarVerification = async (carId: string) => {
     if (!confirm('Вы уверены, что хотите отклонить этот автомобиль? Владельцу придётся заполнить данные заново.')) return;
     try { 
@@ -204,8 +202,8 @@ export const AdminPage = observer(() => {
     { value: 'confirmed', label: 'Подтверждена' }, 
     { value: 'completed', label: 'Завершена' }
   ];
-  // ИСПРАВЛЕНО: Защита от повторного одобрения. Если госномер очищен, кнопка "Одобрить" блокируется и выводится ошибка
-    const carColumns = [
+
+  const carColumns = [
     { 
       key: 'carImageUrl', 
       title: 'Фото авто', 
@@ -238,7 +236,6 @@ export const AdminPage = observer(() => {
         }
         return (
           <div style={{ display: 'flex', gap: '6px' }}>
-            {/* ИСПРАВЛЕНО: Кнопка заблокируется намертво, если у машины нет госномера */}
             <Button 
               size="sm" 
               variant={'success' as any} 
@@ -255,7 +252,6 @@ export const AdminPage = observer(() => {
     { key: 'actions', title: '', render: (c: Car) => <Button size="sm" variant="danger" onClick={() => handleDeleteCar(c.id)}>Удалить</Button> }
   ];
 
-
   const locationColumns = [
     { key: 'name', title: 'Название локации' }, 
     { key: 'city', title: 'Город' }, 
@@ -264,7 +260,6 @@ export const AdminPage = observer(() => {
     { key: 'actions', title: 'Действия', render: (l: LocationType) => (
       <div style={{ display: 'flex', gap: '8px' }}>
         <Button size="sm" variant="secondary" onClick={() => handleOpenModal(l)}>Редактировать</Button>
-        <Button size="sm" variant="danger" onClick={() => handleDeleteLocation(l.id)}>Удалить навсегда</Button>
       </div>
     )}
   ];
@@ -304,7 +299,6 @@ export const AdminPage = observer(() => {
       } 
     }
   ];
-
   const activeCarsForTable = cars.filter(c => c.isActive);
   const allUsersArr = Object.entries(usersList || {})
     .map(([key, uData]: [string, any]) => ({ uid: uData.uid || key, ...uData }))
@@ -333,25 +327,21 @@ export const AdminPage = observer(() => {
     if (status === 'completed') return 'Завершена';
     return 'Отменена';
   };
+
   return (
     <div className={styles.page}>
       <div className={styles.header}><h1 className={styles.title}>Администрирование</h1></div>
       
       <div className={styles.tabsRow} style={{ display: 'flex', gap: '12px', borderBottom: '2px solid #e2e8f0', paddingBottom: '12px', marginBottom: '20px' }}>
-        <button className={`${styles.tabBtn} ${activeTab === 'cars' ? styles.tabActive : ''}`} onClick={() => setActiveTab('cars')}>Автомобили ({activeCarsForTable.length})</button>
-        <button className={`${styles.tabBtn} ${activeTab === 'locations' ? styles.tabActive : ''}`} onClick={() => setActiveTab('locations')}>Локации ({locations.length})</button>
-        <button className={`${styles.tabBtn} ${activeTab === 'rentals' ? styles.tabActive : ''}`} onClick={() => setActiveTab('rentals')}>Аренды ({rentals.length})</button>
-        <button className={`${styles.tabBtn} ${activeTab === 'users' ? styles.tabActive : ''}`} onClick={() => setActiveTab('users')}>Модерация прав ({allUsersArr.length})</button>
+        <button type="button" className={`${styles.tabBtn} ${activeTab === 'cars' ? styles.tabActive : ''}`} onClick={() => setActiveTab('cars')}>Автомобили ({activeCarsForTable.length})</button>
+        <button type="button" className={`${styles.tabBtn} ${activeTab === 'locations' ? styles.tabActive : ''}`} onClick={() => setActiveTab('locations')}>Локации ({locations.length})</button>
+        <button type="button" className={`${styles.tabBtn} ${activeTab === 'rentals' ? styles.tabActive : ''}`} onClick={() => setActiveTab('rentals')}>Аренды ({rentals.length})</button>
+        <button type="button" className={`${styles.tabBtn} ${activeTab === 'users' ? styles.tabActive : ''}`} onClick={() => setActiveTab('users')}>Модерация прав ({allUsersArr.length})</button>
       </div>
       
       {activeTab === 'cars' && <Card className={styles.tableCard}><Table columns={carColumns} data={activeCarsForTable} keyField="id" /></Card>}
       
-      {activeTab === 'locations' && (
-        <>
-          <div className={styles.actions} style={{ marginBottom: '16px' }}><Button variant="primary" onClick={() => handleOpenModal()}>Добавить локацию</Button></div>
-          <Card className={styles.tableCard}><Table columns={locationColumns} data={locations} keyField="id" /></Card>
-        </>
-      )}
+      {activeTab === 'locations' && <Card className={styles.tableCard}><Table columns={locationColumns} data={locations} keyField="id" /></Card>}
 
       {activeTab === 'rentals' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
@@ -385,7 +375,6 @@ export const AdminPage = observer(() => {
                         <div style={{ fontSize: '18px', fontWeight: 800, color: '#2563eb' }}>{rental.totalPrice} ₽</div>
                         
                         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                          {/* ИСПРАВЛЕНО: Выпадающий список статусов переведён на стилизованный UI-компонент <Select> */}
                           {rental.status !== 'pending' && rental.status !== 'active' && (
                             <div style={{ width: '160px' }}>
                               <Select 
@@ -402,10 +391,6 @@ export const AdminPage = observer(() => {
                               <Button size="sm" variant="danger" onClick={() => window.confirm('Отклонить эту заявку?') && handleAdminStatusChange(rental.id, 'cancelled')}>Отклонить</Button>
                             </>
                           )}
-                          {rental.status === 'active' && (
-                            <Button size="sm" variant="success" onClick={() => window.confirm('Завершить аренду?') && handleAdminStatusChange(rental.id, 'completed')}>Завершить поездку</Button>
-                          )}
-                          <Button size="sm" variant="danger" onClick={() => handleDeleteRental(rental.id)}>Удалить</Button>
                         </div>
                       </div>
                     </div>
@@ -416,10 +401,10 @@ export const AdminPage = observer(() => {
           )}
         </div>
       )}
-      
       {activeTab === 'users' && <Card className={styles.tableCard}><Table columns={userColumns} data={allUsersArr} keyField="uid" /></Card>}
       
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingLocation ? '📄 Редактировать локацию' : '📍 Добавить новую локацию'}>
+      {/* МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ ЛОКАЦИЙ */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="📄 Редактировать локацию">
         <div className={styles.form} style={{ padding: '4px 0' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div className={styles.inputWrapper}>
@@ -449,10 +434,11 @@ export const AdminPage = observer(() => {
 
           <div className={styles.formActions} style={{ marginTop: '16px', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
             <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Отмена</Button>
-            <Button variant="primary" onClick={handleSubmit}>{editingLocation ? 'Сохранить изменения' : 'Создать пункт'}</Button>
+            <Button variant="primary" onClick={handleSubmit}>Сохранить изменения</Button>
           </div>
         </div>
       </Modal>
+
       {/* МОДАЛЬНОЕ ОКНО ГРАФИЧЕСКОГО КАЛЕНДАРЯ НАЛОЖЕНИЙ ДЛЯ АДМИНИСТРАТОРА */}
       <Modal isOpen={isConflictModalOpen} onClose={() => { setIsConflictModalOpen(false); setSelectedRental(null); }} title="Проверка конфликтов бронирования">
         {selectedRental && (

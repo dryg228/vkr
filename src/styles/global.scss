@@ -149,40 +149,37 @@ header[class*="header_"] div[class*="bottomBar_"] {
   flex-direction: column !important;
   width: 100vw !important;
   height: 100vh !important;
-  overflow: hidden !important; // Запрещаем прокрутку самого окна браузера
-}
-
-// Контейнер под хедером: Сайдбар (слева) + Рабочая область (справа)
-header + div,
-.mainLayout,
-[class*="mainLayout_"] {
-  display: flex !important;
-  flex-direction: row !important; // Строго в один ряд
-  flex: 1 1 auto !important;
-  width: 100vw !important;
-  height: calc(100vh - 64px) !important; // Высота экрана без верхнего хедера
   overflow: hidden !important; 
 }
 
-// Главная рабочая область (справа от сайдбара), куда рендерится каталог и профиль
+// Каркас приложения: Сайдбар + Контент (Только для верхнего уровня)
+header + div,
+div[class*="appLayoutWrapper_"] {
+  display: flex !important;
+  flex-direction: row !important; 
+  flex: 1 1 auto !important;
+  width: 100vw !important;
+  height: calc(100vh - 64px) !important; 
+  overflow: hidden !important; 
+}
+
+// Главная рабочая область справа от сайдбара
 main,
 .main,
 [class*="pageContainer_"],
 [class*="contentWrapper_"] {
-  flex: 1 1 0% !important; // Занимает ровно 100% оставшегося места справа до конца экрана
-  min-width: 0 !important;  // Защита от распирания сетки грида
+  flex: 1 1 0% !important; 
+  min-width: 0 !important;  
   height: 100% !important;
   display: flex !important;
   flex-direction: column !important;
   background: #f8fafc !important;
   box-sizing: border-box !important;
-
-  // ВОЗВРАЩЕНО И НАСТРОЕНО: Нативный вертикальный скроллбар приложения живет только здесь!
   overflow-y: auto !important; 
-  overflow-x: hidden !important; // Полностью исключает горизонтальный уезд вправо
+  overflow-x: hidden !important; 
 }
 
-// Убираем центрирование и зажимы ширины, чтобы контент плавно шёл до правого края
+// Сбрасываем зажимы для контейнеров верхнего уровня
 .container {
   width: 100% !important;
   max-width: 100% !important; 

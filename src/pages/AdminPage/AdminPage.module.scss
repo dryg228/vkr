@@ -1,12 +1,16 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
 .page {
   // Вырываем админку из сломанного и зажатого родительского контейнера Layout
   position: fixed !important; 
-  top: 64px;    // Высота вашего хедера (измените, если у вас другая высота, например 0)
-  left: 260px;  // Ширина вашего бокового сайдбара/меню
+  top: 64px;    // Высота верхнего хедера
+  left: 260px;  // Ширина бокового сайдбара
   right: 0 !important;
   bottom: 0 !important;
   
-  // Включаем независимую внутреннюю прокрутку, так как position: fixed отключает скролл у body
+  // Включаем независимую внутреннюю прокрутку
   overflow-y: auto !important; 
   padding: 40px 24px;
   background: #f8fafc;
@@ -15,16 +19,18 @@
   flex-direction: column;
   align-items: stretch;
 
-  // Гарантируем, что весь контент внутри (вкладки, кнопки, таблицы) растянется до правого края монитора
-  .header, .tabs, .actions, .tableCard {
+  // Гарантируем, что весь контент внутри растянется до правого края монитора
+  .header, .tabsRow, .actions, .tableCard, .rentalsTabWrapper {
     width: 100% !important;
     max-width: 100% !important;
+    box-sizing: border-box;
   }
 
-  // Адаптив: если на планшетах и мобилках боковое меню скрывается или уходит наверх
+  // Адаптив под скрытие или перенос бокового меню на планшетах/мобилках
   @media (max-width: 1024px) { 
     left: 0 !important;
     top: 64px;
+    padding: 32px 20px;
   }
 
   @media (max-width: 768px) {
@@ -33,7 +39,7 @@
 }
 
 .header {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
   width: 100%;
 
   .title {
@@ -41,6 +47,7 @@
     font-weight: 900;
     color: #0f172a;
     letter-spacing: -0.75px;
+    margin: 0;
 
     @media (max-width: 768px) {
       font-size: 26px;
@@ -48,7 +55,8 @@
   }
 }
 
-.tabs {
+// СИНХРОНИЗИРОВАНО С TSX: Строка переключателей вкладок
+.tabsRow {
   display: flex;
   gap: 8px;
   margin-bottom: 32px;
@@ -56,47 +64,49 @@
   padding: 6px;
   border-radius: 14px;
   width: fit-content;
-  overflow-x: auto;
+  overflow-x: auto; // Горизонтальный скролл табов на мобилках
   max-width: 100%;
   white-space: nowrap;
   -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
   
   &::-webkit-scrollbar {
-    display: none;
+    display: none; // Скрываем некрасивый скроллбар табов
   }
 
-  @media (max-width: 576px) {
+  @media (max-width: 768px) {
     width: 100%;
   }
+}
 
-  .tab {
-    background: transparent;
-    border: none;
-    padding: 10px 20px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #475569;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.23s cubic-bezier(0.4, 0, 0.2, 1);
-    display: inline-block;
+// СИНХРОНИЗИРОВАНО С TSX: Кнопки табов
+.tabBtn {
+  background: transparent;
+  border: none;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.23s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-block;
 
-    &:hover {
-      color: #0f172a;
-    }
-
-    &.active {
-      background: #ffffff;
-      color: #2563eb;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-    }
+  &:hover {
+    color: #0f172a;
   }
+}
+
+// СИНХРОНИЗИРОВАНО С TSX: Активный таб
+.tabActive {
+  background: #ffffff !important;
+  color: #2563eb !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
 }
 
 .actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   margin-bottom: 20px;
   width: 100%;
   
@@ -114,36 +124,35 @@
   }
 }
 
-// ИСПРАВЛЕНО: Добавлены свойства flex-grow и принудительное перебивание ширины для всех внутренних компонентов
+// КАРТОЧКА С ТАБЛИЦАМИ (Добавлен нативный горизонтальный скролл)
 .tableCard {
   background: #ffffff;
   border-radius: 24px;
   border: 1px solid #f1f5f9;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.03);
-  overflow-x: auto;
-  padding: 8px;
-  
-  // Ключевое исправление для уничтожения пустоты справа на всех вкладках:
+  overflow-x: auto; // Таблицы не будут сжиматься в кашу на мобилках
+  padding: 16px;
   width: 100% !important; 
-  flex-grow: 1; // Заставляет карточку таблицы забирать всё свободное место на экране
+  flex-grow: 1; 
   align-self: stretch;
   box-sizing: border-box;
   -webkit-overflow-scrolling: touch;
+  @include scrollbar-styled;
 
   @media (max-width: 768px) {
     border-radius: 16px;
-    padding: 4px;
+    padding: 12px;
   }
 
-  // Принудительно растягиваем кастомный компонент Table, если он рендерится внутри
-  & > div, :global(.ui-table-wrapper) {
-    width: 100% !important;
+  .tableResponsive {
+    width: 100%;
+    min-width: 100%;
   }
 
   table {
     width: 100% !important;
     border-collapse: collapse;
-    min-width: 100%; // Гарантирует, что таблица займет всю ширину карточки
+    min-width: 800px; // Гарантирует, что данные не слипнутся на узких экранах
     
     th {
       background: #f8fafc;
@@ -178,23 +187,232 @@
   }
 }
 
+// Миниатюры фотографий в таблицах
+.tableThumb {
+  width: 50px;
+  height: 35px;
+  border-radius: 6px;
+  object-fit: cover;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+  display: block;
+}
+
+.tableActionsRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+// Вкладка управления заявками аренды
+.rentalsTabWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+
+  .filterRow {
+    width: 100%;
+    
+    .filterSelect {
+      width: 280px;
+      @media (max-width: 576px) {
+        width: 100%;
+      }
+    }
+  }
+}
+
+.rentalsList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+// Карточка аренды
+.rentalCard {
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.02);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.rentalCardMain {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+}
+
+.rentalImageContainer {
+  width: 140px;
+  height: 90px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #f8fafc;
+  flex-shrink: 0;
+  border: 1px solid #f1f5f9;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    height: 180px;
+  }
+}
+
+.rentalImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rentalInfoBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.rentalInfoHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 12px;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+.rentalCarTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.rentalMetaDetails {
+  font-size: 14px;
+  color: #475569;
+  margin-bottom: 16px;
+  line-height: 1.6;
+
+  p {
+    margin: 0 0 6px 0;
+    &:last-child { margin-bottom: 0; }
+  }
+}
+
+.rentalCardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 16px;
+  gap: 16px;
+  width: 100%;
+
+  @media (max-width: 576px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+}
+
+.rentalPrice {
+  font-size: 22px;
+  font-weight: 800;
+  color: #2563eb;
+}
+
+.rentalActionsGroup {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+
+  @media (max-width: 576px) {
+    width: 100%;
+    
+    & > div, button {
+      flex: 1;
+      width: 100%;
+    }
+  }
+}
+
+.statusSelectWrapper {
+  width: 180px;
+  @media (max-width: 576px) { width: 100%; }
+}
+
+.pendingActionsButtons {
+  display: flex;
+  gap: 10px;
+  @media (max-width: 576px) { 
+    width: 100%;
+    button { flex: 1; }
+  }
+}
+
+// Формы и инпуты в модалках
 .form {
   display: flex;
   flex-direction: column;
   gap: 20px;
   width: 100%;
+  box-sizing: border-box;
+}
 
-  .inputWrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    width: 100%;
+.formGridRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @media (max-width: 576px) {
+    grid-template-columns: 1fr;
   }
+}
 
-  .errorText {
-    color: #f43f5e;
-    font-size: 12px;
-    font-weight: 500;
+.inputWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.textareaLabel {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 2px;
+}
+
+.formTextarea {
+  width: 100%;
+  min-height: 90px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
   }
 }
 
@@ -212,4 +430,153 @@
       width: 100%;
     }
   }
+}
+
+.errorText {
+  color: #f43f5e;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.mutedText { color: #94a3b8; }
+.errorTextBold { color: #ef4444; font-weight: 600; }
+.empty { width: 100%; text-align: center; color: #64748b; padding: 40px 0; font-weight: 500; }
+
+// Уведомления и графический календарь наложений
+.conflictAlertBanner {
+  padding: 14px;
+  background: #eff6ff;
+  border-radius: 12px;
+  border: 1px solid #bfdbfe;
+  font-size: 14px;
+  color: #1e40af;
+  line-height: 1.5;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.calendarContainer {
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 20px;
+  background: #ffffff;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.calendarControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 16px;
+
+  button {
+    background: #f1f5f9;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+    &:hover { background: #e2e8f0; }
+  }
+}
+
+.weekDays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: 700;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.dayCell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  border-radius: 10px;
+  position: relative;
+  background: #f8fafc;
+}
+
+.emptyCell { aspect-ratio: 1; }
+
+.daySelectedStart {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-radius: 10px 0 0 10px !important;
+}
+
+.daySelectedEnd {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-radius: 0 10px 10px 0 !important;
+}
+
+.dayBetween {
+  background: #eff6ff !important;
+  color: #1e40af !important;
+  border-radius: 0 !important;
+}
+
+.dayConflict {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border: 1px dashed #f87171;
+}
+
+.conflictDot {
+  position: absolute;
+  top: 2px;
+  right: 6px;
+  font-size: 11px;
+  font-weight: 900;
+  color: #ef4444;
+}
+
+.calendarWarningNotice {
+  font-size: 13px;
+  color: #64748b;
+  margin: 4px 0 0 0;
+  line-height: 1.5;
+}
+
+.imagePreviewModalContent {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.fullPreviewImage {
+  max-width: 100%;
+  max-height: 65vh;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  object-fit: contain;
+}
+
+.modalCloseButtonWrapper {
+  margin-top: 24px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
