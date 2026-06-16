@@ -15,6 +15,7 @@ const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
 export const auth = getAuth(app);
 
+// Полностью автономный сервис работы с корнем Firebase Realtime Database
 export class FirebaseService {
   static async getData<T = unknown>(path: string): Promise<T | null> {
     const dataRef = path ? ref(db, path) : ref(db);
@@ -41,8 +42,8 @@ export class FirebaseService {
     return snapshot.val() as T | null;
   }
 
-  // ПОЛНОСТЬЮ БЕСПЛАТНЫЙ МЕТОД: Конвертирует фото в текст и возвращает его для сохранения в Realtime Database
-  static async uploadFile(path: string, file: File): Promise<string | null> {
+  // ИСПРАВЛЕНО: Полностью удален неиспользуемый аргумент 'path' для успешной сборки build
+  static async uploadFile(file: File): Promise<string | null> {
     try {
       return await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
