@@ -5,17 +5,13 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: $spacing-xl;
-  width: 100% !important;
-  max-width: 100% !important;
-  margin: 0 !important;
+  align-items: center;
+  width: calc(100% - 260px);
+  margin-left: 260px;
   background: #f8fafc;
   box-sizing: border-box;
-
-  // Адаптивные отступы под сайдбар на ПК
-  margin-left: 260px;
-  width: calc(100% - 260px);
-  padding: 32px 40px 40px 40px;
+  padding: 40px;
+  min-height: 100vh;
 
   @media (max-width: 1024px) {
     margin-left: 0;
@@ -24,46 +20,78 @@
   }
 
   @media (max-width: 576px) {
-    padding: 24px 16px;
-    gap: 20px;
+    padding: 20px 16px;
   }
 }
 
 .backButtonWrapper {
-  margin-bottom: 8px;
+  width: 100%;
+  max-width: 1200px;
+  margin-bottom: 16px;
 }
 
-// ИСПРАВЛЕНО: Вместо двух колонок grid теперь строгий вертикальный поток элементов (один под другим)
+// ГЛАВНЫЙ GRID КОНТЕЙНЕР (Умные колонки)
 .mainLayout {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr; // Левая часть чуть шире под картинку
+  gap: 32px;
+  width: 100%;
+  max-width: 1200px;
+  box-sizing: border-box;
+  align-items: start;
+
+  // На планшетах и мобильных схлопываем в одну аккуратную ленту
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+.leftColumn, .rightColumn {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 32px;
   width: 100%;
-  box-sizing: border-box;
+
+  @media (max-width: 992px) {
+    gap: 24px;
+  }
 }
 
-// Контейнер, который выравнивает квадратную карточку фото строго по центру страницы
+// Принудительно опускаем блок отзывов в самый низ на мобильных устройствах
+@media (max-width: 992px) {
+  .leftColumn {
+    display: contents; // Разрушает обертку, позволяя дочерним элементам встать в общий поток сетки
+  }
+  .imageCenterContainer {
+    order: 1;
+  }
+  .rightColumn {
+    order: 2;
+  }
+  .reviewsCard {
+    order: 3;
+  }
+}
+
+// 1. Оформление карточки фотографии
 .imageCenterContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   width: 100%;
-  box-sizing: border-box;
 }
 
 .imageCard {
-  padding: 12px;
+  padding: 16px;
   border-radius: 24px;
   background: #ffffff;
   border: 1px solid #f1f5f9;
-  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.02);
-  display: inline-block; // Позволяет карточке сжаться до размеров внутреннего квадрата
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.02);
+  width: 100%;
+  box-sizing: border-box;
 }
 
-// Компактный квадрат (1:1) для фотографии автомобиля сверху
 .imageWrapper {
-  width: 320px;
-  height: 320px;
+  width: 100%;
+  height: 460px;
   border-radius: 16px;
   overflow: hidden;
   background: #f8fafc;
@@ -71,15 +99,13 @@
   align-items: center;
   justify-content: center;
   border: 1px solid #f1f5f9;
-  transition: transform 0.2s ease;
 
-  &:hover {
-    transform: scale(1.02);
+  @media (max-width: 768px) {
+    height: 340px;
   }
 
   @media (max-width: 480px) {
-    width: 240px;
-    height: 240px;
+    height: 230px;
   }
 }
 
@@ -89,9 +115,9 @@
   object-fit: cover;
 }
 
-// Общие стили для контентных карточек (Инфо, Владелец, Отзывы)
+// Базовые карточки
 .infoCard, .bookingCard, .reviewsCard {
-  padding: 28px;
+  padding: 32px;
   border-radius: 24px;
   background: #ffffff;
   border: 1px solid #f1f5f9;
@@ -100,28 +126,37 @@
   width: 100%;
 
   @media (max-width: 576px) {
-    padding: 20px;
+    padding: 24px 20px;
   }
 }
-// Технические характеристики
+
+// 2. Технические характеристики
 .sectionTitle {
-  margin: 0 0 20px 0;
-  font-size: 18px;
+  margin: 0 0 24px 0;
+  font-size: 16px;
   font-weight: 800;
   color: #0f172a;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
 }
 
 .specsGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 20px 32px;
   font-size: 15px;
 
-  @media (max-width: 480px) {
+  @media (max-width: 1200px) {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 16px;
+  }
+  
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 576px) {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -129,8 +164,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #f8fafc;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .specLabel {
@@ -143,21 +178,25 @@
   font-weight: 700;
 }
 
-// Блок бронирования и информации о владельце
+// 3. Блок бронирования
 .carTitle {
   margin: 0 0 12px 0;
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 800;
   color: #0f172a;
   line-height: 1.2;
   letter-spacing: -0.5px;
+
+  @media (max-width: 576px) {
+    font-size: 24px;
+  }
 }
 
 .ratingRow {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   font-size: 15px;
   font-weight: 600;
 }
@@ -172,33 +211,37 @@
 }
 
 .priceRow {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   display: flex;
   align-items: baseline;
-  gap: 4px;
+  gap: 6px;
 }
 
 .priceAmount {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 800;
   color: #2563eb;
+
+  @media (max-width: 576px) {
+    font-size: 28px;
+  }
 }
 
 .pricePeriod {
   color: #64748b;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 500;
 }
 
 .ownerBlock {
-  padding: 16px;
+  padding: 16px 20px;
   background: #f8fafc;
   border-radius: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   border: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .ownerMeta {
@@ -206,12 +249,13 @@
   color: #64748b;
   text-transform: uppercase;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
 }
 
 .ownerName {
   font-size: 16px;
-  color: #334155;
+  color: #1e293b;
+  font-weight: 600;
 }
 
 .actionWrapper {
@@ -220,13 +264,14 @@
 
 .submitBtn {
   width: 100%;
-  padding: 14px !important;
-  font-size: 16px !important;
-  font-weight: 700 !important;
-  height: auto !important;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 700;
+  height: auto;
+  border-radius: 14px;
 }
 
-// Календарь забронированных дат
+// Календарь
 .bookedDatesCalendar {
   padding: 16px;
   background: #fff5f5;
@@ -238,61 +283,64 @@
 }
 
 .calendarTitle {
-  font-size: 12px;
+  font-size: 11px;
   color: #be123c;
   text-transform: uppercase;
   font-weight: 700;
   letter-spacing: 0.5px;
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .calendarList {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  font-size: 14px;
+  font-size: 13px;
+}
+
+.calendarActiveTrip, .calendarBooked {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: 10px;
+  gap: 12px;
+
+  @media (max-width: 420px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
 }
 
 .calendarActiveTrip {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-weight: 600;
   color: #b91c1c;
   background: rgba(185, 28, 28, 0.04);
-  padding: 6px 10px;
-  border-radius: 8px;
 }
 
 .calendarBooked {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-weight: 600;
   color: #b45309;
   background: rgba(180, 83, 9, 0.04);
-  padding: 6px 10px;
-  border-radius: 8px;
 }
 
-// Системные уведомления ролей
+// Системные плашки
 .myCarBadge, .adminBadge {
-  padding: 14px;
+  padding: 16px;
   background: #f1f5f9;
-  border-radius: 12px;
+  border-radius: 14px;
   text-align: center;
   color: #475569;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
   border: 1px solid #e2e8f0;
-  letter-spacing: 0.5px;
 }
 
 .verificationWarningBlock {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   width: 100%;
 }
 
@@ -301,16 +349,16 @@
   font-weight: 600;
   color: #f43f5e;
   text-align: center;
-  padding: 14px;
+  padding: 16px;
   background: #fff5f5;
   border-radius: 14px;
   border: 1px solid #ffe4e6;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
-// ИСПРАВЛЕНО: Карточка отзывов находится в самом низу и имеет безопасный margin-bottom
+// 4. Отзывы
 .reviewsCard {
-  margin-bottom: 40px; // ИСПРАВЛЕНО: Тот самый необходимый отступ вниз, чтобы контент не прилипал к краю экрана
+  margin-bottom: 24px;
 }
 
 .emptyReviews {
@@ -318,23 +366,21 @@
   color: #64748b;
   font-style: italic;
   font-size: 14px;
-  line-height: 1.6;
 }
 
-// Сама лента отзывов теперь идет сплошным потоком без внутреннего скрытого скроллбара
 .reviewsList {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
   width: 100%;
 }
 
 .reviewItem {
-  padding-bottom: 20px;
+  padding-bottom: 24px;
   border-bottom: 1px solid #f1f5f9;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 
   &:last-child {
     border-bottom: none;
@@ -357,7 +403,7 @@
 
 .reviewStars {
   color: #eab308;
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 1px;
 }
 
@@ -373,7 +419,7 @@
   color: #94a3b8;
 }
 
-// Заглушка критической ошибки
+// Ошибка
 .errorPage {
   text-align: center;
   padding: 80px 20px;
@@ -386,6 +432,8 @@
   border-radius: 24px;
   border: 1px solid #f1f5f9;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.03);
+  margin: 60px auto;
+  max-width: 480px;
 
   h2 {
     color: #0f172a;

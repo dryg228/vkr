@@ -7,9 +7,7 @@ import { formatCarName, getFuelTypeLabel, getTransmissionLabel } from '@/types';
 import styles from './CarDetailsPage.module.scss';
 
 export const CarDetailsPage = observer(() => {
-  // Получаем ID выбранного автомобиля из глобального стейта дата-стора
   const carId = (dataStore as any).selectedCarId || ''; 
-  
   const car = dataStore.getCarById(carId);
   const { isAuthenticated, userId, user, isAdmin } = authStore;
 
@@ -34,13 +32,13 @@ export const CarDetailsPage = observer(() => {
     );
   }
 
-     const { rating, count } = dataStore.getCarRatingInfo(car.id);
+  const { rating, count } = dataStore.getCarRatingInfo(car.id);
   const carReviews = dataStore.getReviewsForCar(car.id);
+  
   const carOwnerId = (car as any).ownerId || '';
   const ownerData = (dataStore as any).usersList?.[carOwnerId];
   const ownerName = ownerData?.name || ownerData?.displayName || 'Частное лицо';
-
-
+  const bookedDates = dataStore.getCarBookedDates(car.id);
 
   return (
     <div className={styles.page}>
@@ -51,49 +49,57 @@ export const CarDetailsPage = observer(() => {
       </div>
 
       <div className={styles.mainLayout}>
-        {/* ЛЕВАЯ КОЛОНКА: Фотография и характеристики */}
+        
+        {/* ЛЕВАЯ СЕКЦИЯ: Медиа и Социальный блок */}
         <div className={styles.leftColumn}>
-          <Card className={styles.imageCard}>
-            <div className={styles.imageWrapper}>
-              <LazyCarImage carId={car.id} alt={formatCarName(car)} className={styles.lazyImage} />
-            </div>
-          </Card>
+          {/* 1. ФОТОГРАФИЯ АВТОМОБИЛЯ */}
+          <div className={styles.imageCenterContainer}>
+            <Card className={styles.imageCard}>
+              <div className={styles.imageWrapper}>
+                <LazyCarImage carId={car.id} alt={formatCarName(car)} className={styles.lazyImage} />
+              </div>
+            </Card>
+          </div>
 
-          <Card className={styles.infoCard}>
-            <h3 className={styles.sectionTitle}>Технические характеристики</h3>
-            <div className={styles.specsGrid}>
-              <div className={styles.specItem}>
-                <span className={styles.specLabel}>Тип топлива:</span>
-                <span className={styles.specValue}>{getFuelTypeLabel(car.fuelType)}</span>
+          {/* 4. ОТЗЫВЫ ВОДИТЕЛЕЙ (на десктопе идут под фото, на мобилках упадут в самый низ) */}
+          <Card className={styles.reviewsCard}>
+            <h3 className={styles.sectionTitle}>Отзывы водителей ({carReviews.length})</h3>
+
+            {carReviews.length === 0 ? (
+              <p className={styles.emptyReviews}>
+                Об этой машине пока нет отзывов. Вы можете стать первым после завершения аренды!
+              </p>
+            ) : (
+              <div className={styles.reviewsList}>
+                {carReviews.map((review) => {
+                  const rev = review as any;
+                  return (
+                    <div key={review.id} className={styles.reviewItem}>
+                      <div className={styles.reviewHeader}>
+                        <strong className={styles.reviewAuthor}>
+                          {rev.userName || rev.renterName || rev.authorName || 'Анонимный водитель'}
+                        </strong>
+                        <span className={styles.reviewStars}>
+                          {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                        </span>
+                      </div>
+                      <p className={styles.reviewText}>{review.comment}</p>
+                      {review.createdAt && (
+                        <span className={styles.reviewDate}>
+                          {new Date(review.createdAt).toLocaleDateString('ru-RU')}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-              <div className={styles.specItem}>
-                <span className={styles.specLabel}>Коробка передач:</span>
-                <span className={styles.specValue}>{getTransmissionLabel(car.transmission)}</span>
-              </div>
-              <div className={styles.specItem}>
-                <span className={styles.specLabel}>Количество мест:</span>
-                <span className={styles.specValue}>{car.seats} мест</span>
-              </div>
-              <div className={styles.specItem}>
-                <span className={styles.specLabel}>Год выпуска:</span>
-                <span className={styles.specValue}>{car.year} г.</span>
-              </div>
-              <div className={styles.specItem}>
-                <span className={styles.specLabel}>Госномер:</span>
-                <span className={styles.specValue}>{car.licensePlate}</span>
-              </div>
-              <div className={styles.specItem}>
-                <span className={styles.specLabel}>Статус:</span>
-                <Badge variant={car.status === 'available' ? 'success' : 'warning' as any}>
-                  {car.status === 'available' ? 'Доступен' : 'Занят'}
-                </Badge>
-              </div>
-            </div>
+            )}
           </Card>
         </div>
-        {/* ПРАВАЯ КОЛОНКА: Заказ, владелец, календарь броней и отзывы */}
+
+        {/* ПРАВАЯ СЕКЦИЯ: Коммерческий блок и Характеристики */}
         <div className={styles.rightColumn}>
-          {/* Блок коммерческой информации */}
+          {/* 3. ОСНОВНАЯ КАРТОЧКА БРОНИРОВАНИЯ */}
           <Card className={styles.bookingCard}>
             <h1 className={styles.carTitle}>{formatCarName(car)}</h1>
             
@@ -112,35 +118,27 @@ export const CarDetailsPage = observer(() => {
               <strong className={styles.ownerName}>{ownerName}</strong>
             </div>
 
-            {/* ВСТАВЛЕНО: Список забронированных периодов отображается здесь внутри карточки бронирования */}
-            {(() => {
-              const bookedDates = dataStore.getCarBookedDates(car.id);
-              if (bookedDates.length === 0) return null;
-              return (
-                <div className={styles.bookedDatesCalendar}>
-                  <span className={styles.calendarTitle}>
-                    📅 Автомобиль забронирован на периоды:
-                  </span>
-                  <div className={styles.calendarList}>
-                    {bookedDates.map((period, idx) => (
-                      <div 
-                        key={idx} 
-                        className={period.status === 'active' ? styles.calendarActiveTrip : styles.calendarBooked}
-                      >
-                        <span>{period.status === 'active' ? '🔴 Сейчас в поездке:' : '🟡 Подтверждено:'}</span>
-                        <strong>{period.start} — {period.end}</strong>
-                      </div>
-                    ))}
-                  </div>
+            {/* Календарь забронированных дат */}
+            {bookedDates.length > 0 && (
+              <div className={styles.bookedDatesCalendar}>
+                <span className={styles.calendarTitle}>📅 Периоды бронирования:</span>
+                <div className={styles.calendarList}>
+                  {bookedDates.map((period, idx) => (
+                    <div 
+                      key={idx} 
+                      className={period.status === 'active' ? styles.calendarActiveTrip : styles.calendarBooked}
+                    >
+                      <span>{period.status === 'active' ? '🔴 В поездке:' : '🟡 Подтверждено:'}</span>
+                      <strong>{period.start} — {period.end}</strong>
+                    </div>
+                  ))}
                 </div>
-              );
-            })()}
+              </div>
+            )}
 
             <div className={styles.actionWrapper}>
               {isAdmin ? (
-                <div className={styles.adminBadge}>
-                  🔧 Режим просмотра (Администратор)
-                </div>
+                <div className={styles.adminBadge}>🔧 Режим просмотра (Администратор)</div>
               ) : car.ownerId === userId ? (
                 <div className={styles.myCarBadge}>Это ваш автомобиль</div>
               ) : car.status !== 'available' ? (
@@ -177,41 +175,40 @@ export const CarDetailsPage = observer(() => {
             </div>
           </Card>
 
-          {/* Блок списка отзывов */}
-          <Card className={styles.reviewsCard}>
-            <h3 className={styles.sectionTitle}>Отзывы водителей ({carReviews.length})</h3>
-
-            {carReviews.length === 0 ? (
-              <p className={styles.emptyReviews}>
-                Об этой машине пока нет отзывов. Вы можете стать первым после завершения аренды!
-              </p>
-            ) : (
-              <div className={styles.reviewsList}>
-                {carReviews.map((review) => {
-                  const rev = review as any;
-                  return (
-                    <div key={review.id} className={styles.reviewItem}>
-                      <div className={styles.reviewHeader}>
-                        <strong className={styles.reviewAuthor}>
-                          {rev.userName || rev.renterName || rev.authorName || 'Анонимный водитель'}
-                        </strong>
-                        <span className={styles.reviewStars}>
-                          {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
-                        </span>
-                      </div>
-                      <p className={styles.reviewText}>{review.comment}</p>
-                      {review.createdAt && (
-                        <span className={styles.reviewDate}>
-                          {new Date(review.createdAt).toLocaleDateString('ru-RU')}
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
+          {/* 2. ТЕХНИЧЕСКИЕ ХАРАКТЕРИСТИКИ */}
+          <Card className={styles.infoCard}>
+            <h3 className={styles.sectionTitle}>Технические характеристики</h3>
+            <div className={styles.specsGrid}>
+              <div className={styles.specItem}>
+                <span className={styles.specLabel}>Тип топлива:</span>
+                <span className={styles.specValue}>{getFuelTypeLabel(car.fuelType)}</span>
               </div>
-            )}
+              <div className={styles.specItem}>
+                <span className={styles.specLabel}>Коробка передач:</span>
+                <span className={styles.specValue}>{getTransmissionLabel(car.transmission)}</span>
+              </div>
+              <div className={styles.specItem}>
+                <span className={styles.specLabel}>Количество мест:</span>
+                <span className={styles.specValue}>{car.seats} мест</span>
+              </div>
+              <div className={styles.specItem}>
+                <span className={styles.specLabel}>Год выпуска:</span>
+                <span className={styles.specValue}>{car.year} г.</span>
+              </div>
+              <div className={styles.specItem}>
+                <span className={styles.specLabel}>Госномер:</span>
+                <span className={styles.specValue}>{car.licensePlate}</span>
+              </div>
+              <div className={styles.specItem}>
+                <span className={styles.specLabel}>Статус:</span>
+                <Badge variant={car.status === 'available' ? 'success' : ('warning' as any)}>
+                  {car.status === 'available' ? 'Доступен' : 'Занят'}
+                </Badge>
+              </div>
+            </div>
           </Card>
         </div>
+
       </div>
     </div>
   );
