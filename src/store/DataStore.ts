@@ -274,10 +274,19 @@ export class DataStore {
     
     try {
       await FirebaseService.setData(`cars/${id}`, updated);
+      
+      // ИСПРАВЛЕНО: Полное удаление старого фото из кэша и перезапись новой строки Base64 в NoSQL-базе данных
       if (carImageUrl) {
-        await FirebaseService.setData(`carImages/${id}`, carImageUrl);
-        runInAction(() => { this.carImagesCache[id] = carImageUrl; });
+        await FirebaseService.setData(`carImages/${id}`, carImageUrl); 
+        
+        runInAction(() => { 
+          if (this.carImagesCache && this.carImagesCache[id]) {
+            delete this.carImagesCache[id];
+          }
+          this.carImagesCache[id] = carImageUrl; 
+        });
       }
+      
       runInAction(() => { this.cars.splice(index, 1, updated as Car); });
       return true;
     } catch (error) { 
@@ -351,13 +360,10 @@ export class DataStore {
       await FirebaseService.setData(`rentals/${id}`, updated);
       runInAction(() => { 
         this.rentals[index] = updated; 
-        // ИСПРАВЛЕНО: Автоматически меняем статус машины в реальном времени
-                // ИСПРАВЛЕНО: Применяем явное приведение типов as any, чтобы убрать ошибку литеральных статусов
         const carIndex = this.cars.findIndex(c => c.id === updated.carId);
         if (carIndex !== -1) {
           (this.cars[carIndex] as any).status = status === 'active' ? 'booked' : 'available';
         }
-
       });
       return true;
     } catch (error) { 
@@ -444,7 +450,6 @@ export class DataStore {
     ).sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime());
   }
 
-  // ИНТЕГРИРОВАНО: Сбор занятых периодов дат из Realtime Database для конкретного автомобиля
   getCarBookedDates(carId: string): { start: string; end: string; status: string }[] {
     return this.rentals
       .filter(r => r.carId === carId && (r.status === 'confirmed' || r.status === 'active'))

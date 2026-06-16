@@ -162,15 +162,22 @@ export const MyCarsPage = observer(() => {
                     <h3>{formatCarName(car)}</h3>
                     
                     <div className={styles.statusBadgesRow}>
-                      {/* Если машина не проверена администратором — показываем только "На модерации" */}
-                      {!(car as any).isVerified ? (
-                        <Badge variant="warning">На модерации</Badge>
-                      ) : (
-                        /* Если модерация успешно пройдена — показываем штатный статус доступности */
-                        <Badge variant={(car.status === 'available' ? 'success' : 'warning') as any}>
-                          {getCarStatusLabel(car.status)}
-                        </Badge>
-                      )}
+{!(car as any).isVerified && (
+  car.licensePlate ? (
+    <Badge variant="warning">На модерации</Badge>
+  ) : (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%', marginTop: '6px' }}>
+      <div style={{ alignSelf: 'flex-start' }}>
+        <Badge variant={"danger" as any}>Отклонено / Требует перезаполнения</Badge>
+      </div>
+      <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 600, lineHeight: '1.4' }}>
+        🛑 Администрация отклонила этот автомобиль из-за некорректных данных. Нажмите кнопку «Редактировать», чтобы заново загрузить четкое фото автомобиля и указать правильный госномер.
+      </span>
+    </div>
+  )
+)}
+
+
                     </div>
                   </div>
 

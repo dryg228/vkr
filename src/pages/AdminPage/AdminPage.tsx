@@ -36,7 +36,7 @@ export const AdminPage = observer(() => {
   const [formData, setFormData] = useState<LocationFormData & { description?: string }>({ name: '', address: '', city: '', description: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Стейты администрирования вкладок аренды и календаря
+  // Стейты администрирования вкладок аренды и календаря конфликтов
   const [rentalStatusFilter, setRentalStatusFilter] = useState<string>('pending');
   const [selectedRental, setSelectedRental] = useState<Rental | null>(null);
   const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
@@ -149,9 +149,18 @@ export const AdminPage = observer(() => {
     try { await dataStore.updateCar(carId, { isVerified: true }); } catch (e) { console.error('Ошибка верификации автомобиля:', e); }
   };
 
+  // ИСПРАВЛЕНО: При отклонении полностью сбрасываем верификацию, очищаем госномер и картинку
   const handleRejectCarVerification = async (carId: string) => {
-    if (!confirm('Вы уверены, что хотите отклонить этот автомобиль?')) return;
-    try { await dataStore.updateCar(carId, { isVerified: false, carImageUrl: '', licensePlate: '' }); } catch (e) { console.error('Ошибка отклонения автомобиля:', e); }
+    if (!confirm('Вы уверены, что хотите отклонить этот автомобиль? Владельцу придётся заполнить данные заново.')) return;
+    try { 
+      await dataStore.updateCar(carId, { 
+        isVerified: false, 
+        carImageUrl: '', 
+        licensePlate: '' 
+      }); 
+    } catch (e) { 
+      console.error('Ошибка отклонения автомобиля:', e); 
+    }
   };
 
   const handleApproveUserVerification = async (uid: string) => {
@@ -190,8 +199,13 @@ export const AdminPage = observer(() => {
     { value: 'cancelled', label: 'Отмененные (Cancelled)' }
   ];
 
-  // ИСПРАВЛЕНО: Безопасное приведение к any для полей carImageUrl и imageUrl, а также для вариантов бейджей
-  const carColumns = [
+  const rentalStatusOptions = [
+    { value: 'pending', label: 'Ожидает' }, 
+    { value: 'confirmed', label: 'Подтверждена' }, 
+    { value: 'completed', label: 'Завершена' }
+  ];
+  // ИСПРАВЛЕНО: Защита от повторного одобрения. Если госномер очищен, кнопка "Одобрить" блокируется и выводится ошибка
+    const carColumns = [
     { 
       key: 'carImageUrl', 
       title: 'Фото авто', 
@@ -202,7 +216,12 @@ export const AdminPage = observer(() => {
         ) : <span style={{ color: '#94a3b8' }}>Нет фото</span>;
       }
     },
-    { key: 'brand', title: 'Марка' }, { key: 'model', title: 'Модель' }, { key: 'year', title: 'Год' }, { key: 'licensePlate', title: 'Госномер', render: (c: Car) => c.licensePlate || <span style={{ color: '#ef4444', fontWeight: 600 }}>Отклонен / Пусто</span> },
+    { key: 'brand', title: 'Марка' }, { key: 'model', title: 'Модель' }, { key: 'year', title: 'Год' }, 
+    { 
+      key: 'licensePlate', 
+      title: 'Госномер', 
+      render: (c: Car) => c.licensePlate || <span style={{ color: '#ef4444', fontWeight: 600 }}>Отклонен / Пусто</span> 
+    },
     { key: 'pricePerDay', title: 'Цена/день', render: (c: Car) => `${c.pricePerDay} ₽` },
     { key: 'locationId', title: 'Локация', render: (c: Car) => getLocationById(c.locationId)?.name || '-' },
     { 
@@ -219,7 +238,15 @@ export const AdminPage = observer(() => {
         }
         return (
           <div style={{ display: 'flex', gap: '6px' }}>
-            <Button size="sm" variant={'success' as any} onClick={() => handleApproveCarVerification(c.id)}>Одобрить</Button>
+            {/* ИСПРАВЛЕНО: Кнопка заблокируется намертво, если у машины нет госномера */}
+            <Button 
+              size="sm" 
+              variant={'success' as any} 
+              onClick={() => handleApproveCarVerification(c.id)}
+              disabled={!c.licensePlate} 
+            >
+              Одобрить
+            </Button>
             <Button size="sm" variant={'danger' as any} onClick={() => handleRejectCarVerification(c.id)}>Отклонить</Button>
           </div>
         );
@@ -227,6 +254,7 @@ export const AdminPage = observer(() => {
     },
     { key: 'actions', title: '', render: (c: Car) => <Button size="sm" variant="danger" onClick={() => handleDeleteCar(c.id)}>Удалить</Button> }
   ];
+
 
   const locationColumns = [
     { key: 'name', title: 'Название локации' }, 
@@ -291,7 +319,7 @@ export const AdminPage = observer(() => {
   const filteredRentals = rentalStatusFilter === 'all' 
     ? sortedRentals 
     : sortedRentals.filter(r => r.status === rentalStatusFilter);
-  // Хелперы для безопасного маппинга литеральных типов Badge и текстов статусов
+
   const getAdminRentalBadgeVariant = (status: string) => {
     if (status === 'confirmed' || status === 'active' || status === 'completed') return 'success';
     if (status === 'pending') return 'warning';
@@ -305,7 +333,6 @@ export const AdminPage = observer(() => {
     if (status === 'completed') return 'Завершена';
     return 'Отменена';
   };
-
   return (
     <div className={styles.page}>
       <div className={styles.header}><h1 className={styles.title}>Администрирование</h1></div>
@@ -326,7 +353,6 @@ export const AdminPage = observer(() => {
         </>
       )}
 
-      {/* Вкладка "Аренды" переведена на интерактивные карточки броней */}
       {activeTab === 'rentals' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
           <div style={{ display: 'flex', gap: '16px', width: '100%' }}>
@@ -358,7 +384,18 @@ export const AdminPage = observer(() => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
                         <div style={{ fontSize: '18px', fontWeight: 800, color: '#2563eb' }}>{rental.totalPrice} ₽</div>
                         
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                          {/* ИСПРАВЛЕНО: Выпадающий список статусов переведён на стилизованный UI-компонент <Select> */}
+                          {rental.status !== 'pending' && rental.status !== 'active' && (
+                            <div style={{ width: '160px' }}>
+                              <Select 
+                                options={rentalStatusOptions} 
+                                value={rental.status} 
+                                onChange={(e: any) => handleRentalStatusChange(rental.id, e.target?.value ?? e)} 
+                              />
+                            </div>
+                          )}
+
                           {rental.status === 'pending' && (
                             <>
                               <Button size="sm" variant="primary" onClick={() => { setSelectedRental(rental); setIsConflictModalOpen(true); }}>🔎 Проверить наложения</Button>
@@ -368,9 +405,7 @@ export const AdminPage = observer(() => {
                           {rental.status === 'active' && (
                             <Button size="sm" variant="success" onClick={() => window.confirm('Завершить аренду?') && handleAdminStatusChange(rental.id, 'completed')}>Завершить поездку</Button>
                           )}
-                          {(rental.status === 'confirmed' || rental.status === 'completed' || rental.status === 'cancelled') && (
-                            <Button size="sm" variant="danger" onClick={() => handleDeleteRental(rental.id)}>Удалить</Button>
-                          )}
+                          <Button size="sm" variant="danger" onClick={() => handleDeleteRental(rental.id)}>Удалить</Button>
                         </div>
                       </div>
                     </div>
@@ -381,9 +416,9 @@ export const AdminPage = observer(() => {
           )}
         </div>
       )}
+      
       {activeTab === 'users' && <Card className={styles.tableCard}><Table columns={userColumns} data={allUsersArr} keyField="uid" /></Card>}
       
-      {/* Модальное окно создания и редактирования пунктов локаций */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingLocation ? '📄 Редактировать локацию' : '📍 Добавить новую локацию'}>
         <div className={styles.form} style={{ padding: '4px 0' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -418,7 +453,6 @@ export const AdminPage = observer(() => {
           </div>
         </div>
       </Modal>
-
       {/* МОДАЛЬНОЕ ОКНО ГРАФИЧЕСКОГО КАЛЕНДАРЯ НАЛОЖЕНИЙ ДЛЯ АДМИНИСТРАТОРА */}
       <Modal isOpen={isConflictModalOpen} onClose={() => { setIsConflictModalOpen(false); setSelectedRental(null); }} title="Проверка конфликтов бронирования">
         {selectedRental && (
