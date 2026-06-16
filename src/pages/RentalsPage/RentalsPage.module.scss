@@ -5,18 +5,18 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 32px; // Оптимальный отступ для дашбордов
-  width: 100%;
-  max-width: 1200px;
-  min-height: 500px;
-  margin: 0 auto;
-  padding: 40px $spacing-xl;
+  gap: $spacing-2xl;
+  
+  // ИСПРАВЛЕНО: Убраны margin-left и calc(100% - 260px)
+  // Теперь страница нативно растянется до самого правого края экрана
+  width: 100%; 
+  padding: 40px;
+  background: #f8fafc;
   box-sizing: border-box;
-  font-family: 'Inter', sans-serif;
 
-  @include mobile {
-    padding: 24px $spacing-md;
-    gap: 24px;
+  @media (max-width: 576px) {
+    padding: 24px 16px;
+    gap: $spacing-xl;
   }
 }
 
@@ -27,12 +27,11 @@
   gap: $spacing-md;
   width: 100%;
 
-  @include mobile {
+  @media (max-width: 576px) {
     flex-direction: column;
     align-items: stretch;
     gap: 16px;
 
-    // Растягиваем кнопку создания на весь экран смартфона
     button, :global(.ui-button) {
       width: 100%;
       height: 48px;
@@ -42,12 +41,12 @@
 
 .title {
   margin: 0;
-  font-size: 32px; // Современный крупный заголовок
-  font-weight: 800; // Ультра-жирный шрифт для премиального стиля
-  color: #0f172a; // Глубокий графитовый оттенок
+  font-size: 32px; 
+  font-weight: 800; 
+  color: #0f172a; 
   letter-spacing: -0.75px;
 
-  @include mobile {
+  @media (max-width: 576px) {
     font-size: 24px;
   }
 }
@@ -60,21 +59,20 @@
   background: #ffffff;
   padding: 16px;
   border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.02); // Едва заметная тень для объема
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.02); 
   box-sizing: border-box;
 
-  @include mobile {
+  @media (max-width: 576px) {
     padding: 12px;
   }
 }
 
-// Повышаем читаемость селектора и делаем его более нативным
-.page .filters .statusSelect {
+.statusSelect {
   width: 240px;
   min-width: 240px;
   max-width: 240px;
   
-  @include mobile {
+  @media (max-width: 576px) {
     width: 100%;
     min-width: 100%;
     max-width: 100%;
@@ -92,83 +90,151 @@
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:focus {
-      border-color: #2563eb; // Фирменный синий акцент при фокусе
+      border-color: #2563eb; 
       background: #ffffff;
       box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
     }
   }
 }
 
-.page .empty,
-.page .loading {
+.grid {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
   width: 100%;
-  min-height: 240px;
-  background: #ffffff;
-  border-radius: 24px;
-  border: 1px solid #f1f5f9;
-  color: #64748b;
-  font-size: $font-size-lg;
-  font-weight: 500;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.02);
   box-sizing: border-box;
 }
-
-// Ультра-современная адаптивная обертка для таблиц
-.tableCard {
-  width: 100%;
-  overflow-x: auto;
-  box-sizing: border-box;
+// Стилизация карточки аренды бронирований
+.rentalCard {
   background: #ffffff;
-  border-radius: 24px; // Сильное скругление карточки
+  padding: 24px;
+  border-radius: 24px;
   border: 1px solid #f1f5f9;
-  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.03); // Мягкая премиальная тень
-  margin: 0 !important;      
-  -webkit-overflow-scrolling: touch;
+  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.03); // Премиальная мягкая тень
+  width: 100%;
+  box-sizing: border-box;
 
-  @include mobile {
+  @media (max-width: 576px) {
+    padding: 16px;
     border-radius: 16px;
   }
+}
 
-  // Кастомизация внутренних элементов таблицы для идеального UI
-  table {
+// Контентный флекс-поток карточки
+.rentalContent {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+// Контейнер ленивой загрузки медиакартинок
+.rentalImage {
+  width: 130px;
+  height: 90px;
+  border-radius: 14px;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+
+  @media (max-width: 768px) {
     width: 100%;
-    border-collapse: collapse;
-    min-width: 750px; // Предотвращает сжатие данных на смартфонах
+    height: 180px;
+    border-radius: 12px;
+  }
+}
 
-    th {
-      background: #f8fafc;
-      color: #64748b;
-      font-weight: 600;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 16px 24px;
-      border-bottom: 1px solid #e2e8f0;
-    }
+// Блок текстовой информации
+.rentalInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
 
-    td {
-      padding: 18px 24px;
-      border-bottom: 1px solid #f1f5f9;
-      color: #334155;
-      font-size: 15px;
-      font-weight: 500;
-    }
+// Шапка карточки (имя и бейдж статуса)
+.rentalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 12px;
 
-    tr:last-child td {
-      border-bottom: none;
-    }
+  .carName {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
 
-    // Стилизация кнопок внутри таблицы (например, действий админа)
-    button, :global(.ui-button) {
-      height: 36px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 13px;
+    @media (max-width: 576px) {
+      font-size: 18px;
     }
   }
+}
+
+// Детали брони (даты, дни)
+.rentalDetails {
+  color: #475569;
+  font-size: 14px;
+  margin-bottom: 16px;
+
+  p {
+    margin: 0 0 4px 0;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+// Подвал карточки (цена и кнопки управления)
+.rentalFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 16px;
+  margin-top: auto;
+  gap: 12px;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+}
+
+.totalPrice {
+  font-size: 20px;
+  font-weight: 800;
+  color: #2563eb; // Синий акцент для итоговой цены
+}
+
+.rentalActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  @media (max-width: 480px) {
+    width: 100%;
+    
+    button, :global(.ui-button) {
+      flex: 1;
+      width: 100%;
+      height: 40px;
+    }
+  }
+}
+
+// Формы и модальные окна
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0;
 }
 
 .inputWrapper {
@@ -178,17 +244,207 @@
   width: 100%;
 }
 
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+
+  @media (max-width: 480px) {
+    flex-direction: column-reverse;
+    
+    button, :global(.ui-button) {
+      width: 100%;
+      height: 44px;
+    }
+  }
+}
+
+// Обработка системных состояний (ошибки, загрузка)
 .errorText {
-  color: #f43f5e; // Красивый неоново-красный вместо грязного кирпичного
+  color: #f43f5e; // Красивый неоново-красный цвет
   font-size: 12px;
   font-weight: 500;
   margin-top: 4px;
   margin-bottom: 4px;
   text-align: left;
-  animation: slideDown 0.2s ease-out; // Плавное появление ошибки
+  animation: slideDown 0.2s ease-out;
+}
+
+.empty,
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 240px;
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid #f1f5f9;
+  color: #64748b;
+  font-size: 16px;
+  font-weight: 500;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.02);
+  box-sizing: border-box;
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
+.priceBadge {
+  padding: 14px;
+  background: #eff6ff;
+  border-radius: 12px;
+  color: #1e40af;
+  font-weight: 700;
+  font-size: 15px;
+  text-align: center;
+  border: 1px solid #bfdbfe;
+}
+
+.starsWrapper {
+  display: flex;
+  gap: 8px;
+  font-size: 32px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  justify-content: center;
+}
+
+.starActive {
+  color: #eab308;
+  transition: transform 0.1s ease;
+  &:hover { transform: scale(1.15); }
+}
+
+.starInactive {
+  color: #cbd5e1;
+  transition: transform 0.1s ease;
+  &:hover { color: #facc15; }
+}
+
+// ============================================
+// ФИКС КАЛЕНДАРНОЙ СЕТКИ (ИСПРАВЛЕНО)
+// ============================================
+
+.calendarContainer {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 10px;
+}
+
+.calendarControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 16px;
+
+  button {
+    background: #f1f5f9;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 700;
+    color: #334155;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    
+    &:hover { background: #e2e8f0; }
+  }
+}
+
+// Выстраивает дни недели (Пн, Вт...) горизонтально в 7 колонок
+.weekDays {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+// КЛЮЧЕВОЙ ФИКС: Выстраивает числа (1, 2, 3...) в правильную сетку 7x5
+.daysGrid {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important; // Строго 7 колонок по дням недели
+  gap: 8px !important;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.emptyCell {
+  height: 38px;
+}
+
+.dayCell {
+  height: 38px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+
+  &:hover:not(.dayPast):not(.dayBooked) {
+    background: #eff6ff;
+    color: #2563eb;
+    border-color: #bfdbfe;
+  }
+}
+
+// Стили для различных состояний дней
+.dayPast {
+  color: #cbd5e1 !important;
+  cursor: not-allowed !important;
+  background: #f8fafc !important;
+  border-color: #f1f5f9 !important;
+  text-decoration: none !important;
+}
+
+.dayBooked {
+  background: #fef2f2 !important;
+  color: #ef4444 !important;
+  text-decoration: line-through !important;
+  cursor: not-allowed !important;
+  border-color: #fee2e2 !important;
+}
+
+.daySelectedStart {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+}
+
+.daySelectedEnd {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+}
+
+.dayBetween {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  border-color: #bfdbfe !important;
+}
+

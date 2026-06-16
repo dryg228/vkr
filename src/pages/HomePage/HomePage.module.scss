@@ -7,9 +7,26 @@
   flex-direction: column;
   gap: $spacing-2xl;
   
-  // ИСПРАВЛЕНО: Растягиваем главную страницу на всю ширину выделенного Layout пространства
-  width: 100%;
+  // ИСПРАВЛЕНО: Полностью убраны ограничения max-width и margin: 0 auto.
+  // Теперь страница нативно занимает 100% всей доступной ширины справа от сайдбара.
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 40px;
+  background: #f8fafc;
   box-sizing: border-box;
+
+  // Гарантируем, что все внутренние секции растягиваются на всю доступную ширину
+  .welcome, .stats, .quickActions, .actionCards {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  @media (max-width: 576px) {
+    padding: 24px 16px;
+    gap: $spacing-xl;
+  }
 }
 
 .welcome {
@@ -17,179 +34,196 @@
   justify-content: space-between;
   align-items: center;
   gap: $spacing-xl;
-  padding: $spacing-2xl $spacing-3xl;
+  padding: 48px;
   background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
   border-radius: $radius-xl;
   color: $color-text-inverse;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 16px 48px rgba($color-primary, 0.3);
-  
-  // ИСПРАВЛЕНО: Гарантируем растяжение плашки приветствия
+  box-shadow: 0 16px 40px rgba($color-primary, 0.15);
   width: 100%;
   box-sizing: border-box;
 
-  @include mobile {
+  @media (max-width: 768px) {
     flex-direction: column;
     text-align: center;
-    padding: $spacing-xl;
+    padding: 32px 24px;
+    gap: $spacing-lg;
   }
 }
 
 .welcomeContent {
   position: relative;
-  z-index: 1;
-  max-width: 600px;
+  z-index: 2;
+  max-width: 650px;
+  display: flex;
+  flex-direction: column;
+  
+  @media (max-width: 768px) {
+    align-items: center;
+  }
 }
 
 .welcomeTitle {
   font-family: $font-family-primary;
-  font-size: $font-size-4xl;
+  font-size: clamp(24px, 4vw, 40px); // Плавное масштабирование шрифта под любой размер дисплея
   font-weight: $font-weight-bold;
   margin: 0 0 $spacing-md;
-
-  @include mobile {
-    font-size: $font-size-2xl;
-  }
+  line-height: 1.2;
 }
 
 .welcomeText {
-  font-size: $font-size-lg;
-  opacity: 0.9;
-  margin: 0 0 $spacing-lg;
+  font-size: clamp(14px, 1.8vw, 18px);
+  opacity: 0.95;
+  margin: 0 0 $spacing-xl;
   line-height: $line-height-relaxed;
   color: $color-text-inverse;
 }
 
 .welcomeDecor {
   position: absolute;
-  right: -60px;
-  bottom: -60px;
-  width: 300px;
-  height: 300px;
-  color: rgba(255, 255, 255, 0.1);
+  right: -20px;
+  bottom: -40px;
+  width: 260px;
+  height: 260px;
+  color: rgba(255, 255, 255, 0.08);
   transform: rotate(-15deg);
+  pointer-events: none;
 
-  @include mobile {
-    display: none;
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  @media (max-width: 992px) {
+    width: 200px;
+    height: 200px;
+  }
+
+  @media (max-width: 768px) {
+    display: none; // Скрываем декоративные круги на смартфонах
   }
 }
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  // ИСПРАВЛЕНО: Теперь карточки выстраиваются в один ровный ряд на ПК и красиво тянутся
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: $spacing-lg;
-  
-  // ИСПРАВЛЕНО: Сетка статистики заполняет всю ширину
   width: 100%;
   box-sizing: border-box;
 
-  @include tablet {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @include mobile {
-    grid-template-columns: 1fr;
+  @media (max-width: 576px) {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); // Компактная сетка на смартфонах
+    gap: $spacing-md;
   }
 }
 
-.page .statCard {
+.statCard {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: $spacing-md;
-  width: 100%; // Карточки занимают всю ширину ячейки грида
-
-  padding: $spacing-lg $spacing-xl !important;
+  gap: $spacing-sm;
+  width: 100%;
+  padding: 24px !important;
   border-radius: $radius-xl !important;
-  background: linear-gradient(135deg, $color-bg-primary 0%, $color-bg-secondary 100%);
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
   transition: all $transition-smooth;
   box-sizing: border-box;
 
   &:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
   }
 
+  @media (max-width: 576px) {
+    padding: 16px !important;
+    border-radius: $radius-lg !important;
+  }
+
+  // Цветовые модификаторы и градиенты иконок
   &.primary .statIcon {
     background: linear-gradient(135deg, $color-primary, $color-primary-dark);
     color: $color-text-inverse;
   }
 
   &.success .statIcon {
-    background: linear-gradient(135deg, $color-success, darken($color-success, 10%));
+    background: linear-gradient(135deg, #10b981, #047857);
     color: $color-text-inverse;
   }
 
   &.warning .statIcon {
-    background: linear-gradient(135deg, $color-warning, darken($color-warning, 10%));
+    background: linear-gradient(135deg, #f59e0b, #b45309);
     color: $color-text-inverse;
   }
 
   &.info .statIcon {
-    background: linear-gradient(135deg, $color-info, darken($color-info, 10%));
+    background: linear-gradient(135deg, #06b6d4, #0369a1);
     color: $color-text-inverse;
   }
 }
 
-.statCard .statIcon {
+.statIcon {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 52px;
   height: 52px;
   border-radius: $radius-lg;
-  margin-left: auto;
-  margin-right: auto;
+  margin-bottom: 4px;
 
   svg {
-    width: 26px;
-    height: 26px;
-    margin: 0;
-    padding: 0;
+    width: 24px;
+    height: 24px;
   }
-}
 
-.statContent {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+  @media (max-width: 576px) {
+    width: 44px;
+    height: 44px;
+    
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
 }
 
 .statValue {
   font-family: $font-family-primary;
-  font-size: $font-size-2xl;
+  font-size: clamp(20px, 3vw, 28px);
   font-weight: $font-weight-bold;
   color: $color-text-primary;
+  line-height: 1;
 }
 
-.statContent .statTitle {
-  font-size: $font-size-sm;
-  color: $color-text-muted;
+.statTitle {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.quickActions {
+  width: 100%;
+  margin-top: $spacing-md;
 }
 
 .sectionTitle {
   font-family: $font-family-primary;
-  font-size: $font-size-2xl;
-  font-weight: $font-weight-bold;
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
   margin: 0 0 $spacing-lg;
-  background: linear-gradient(135deg, $color-primary, $color-primary-dark);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  width: 100%;
+  letter-spacing: -0.3px;
 }
 
-// ИСПРАВЛЕНО: Карточки действий переведены на гибкий Flexbox для автоматического закрытия пустоты справа
 .actionCards {
   display: flex;
   flex-wrap: wrap;
-  gap: $spacing-xl;
+  gap: $spacing-lg;
   width: 100%;
   box-sizing: border-box;
 }
@@ -198,36 +232,41 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: $spacing-sm;
-  padding: $spacing-xl !important;
+  gap: $spacing-xs;
+  padding: 24px !important;
   border-radius: $radius-xl !important;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
   transition: all $transition-smooth;
   box-sizing: border-box;
   
-  // Ключевое свойство: карточка будет расширяться до правого края экрана в ряду
-  flex: 1 1 300px;
+  // Карточки будут автоматически расширяться, заполняя всю ширину экрана на ПК
+  flex: 1 1 280px;
   max-width: 100%;
 
-  @media (max-width: 576px) {
-    flex: 1 1 100%;
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px rgba(15, 23, 42, 0.06);
   }
 
-  &:hover {
-    transform: scale(1.02);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+  @media (max-width: 576px) {
+    flex: 1 1 100%; // В мобильной версии карточки встают друг под друга
+    padding: 20px !important;
   }
 
   h3 {
-    font-size: $font-size-lg;
-    font-weight: $font-weight-semibold;
-    color: $color-text-primary;
-    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 8px 0 4px 0;
   }
 
   p {
-    font-size: $font-size-sm;
-    color: $color-text-muted;
-    margin: 0;
+    font-size: 13px;
+    color: #64748b;
+    margin: 0 0 12px 0;
+    line-height: 1.4;
   }
 }
 
@@ -235,15 +274,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, rgba($color-primary, 0.1), rgba($color-primary, 0.05));
-  border-radius: $radius-xl;
+  width: 48px;
+  height: 48px;
+  background: #eff6ff;
+  border-radius: 12px;
   color: $color-primary;
-  margin-bottom: $spacing-sm;
 
   svg {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
   }
 }

@@ -43,19 +43,48 @@ export class FirebaseService {
   }
 
   // ИСПРАВЛЕНО: Полностью удален неиспользуемый аргумент 'path' для успешной сборки build
+    // ОПТИМИЗИРОВАНО: Сжатие изображений через Canvas перед отправкой по сети
   static async uploadFile(file: File): Promise<string | null> {
     try {
       return await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        reader.readAsDataURL(file); // Читаем файл как DataURL (Base64 текстовая строка)
-        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target?.result as string;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Устанавливаем оптимальное разрешение для веба
+            const MAX_WIDTH = 800;
+            const MAX_HEIGHT = 600;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+            } else {
+              if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx?.drawImage(img, 0, 0, width, height);
+
+            // Конвертируем в WebP (или JPEG) с качеством 70% для экстремального сжатия сетевого трафика
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+            resolve(compressedBase64);
+          };
+        };
         reader.onerror = (error) => reject(error);
       });
     } catch (error) {
-      console.error('Ошибка конвертации файла в текст:', error);
+      console.error('Ошибка компрессии изображения:', error);
       return null;
     }
   }
+
 }
 
 export default FirebaseService;

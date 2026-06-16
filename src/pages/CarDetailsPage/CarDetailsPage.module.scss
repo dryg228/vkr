@@ -1,0 +1,396 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xl;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  background: #f8fafc;
+  box-sizing: border-box;
+
+  // Адаптивные отступы под сайдбар на ПК
+  margin-left: 260px;
+  width: calc(100% - 260px);
+  padding: 32px 40px 40px 40px;
+
+  @media (max-width: 1024px) {
+    margin-left: 0;
+    width: 100%;
+    padding: 32px 24px;
+  }
+
+  @media (max-width: 576px) {
+    padding: 24px 16px;
+    gap: 20px;
+  }
+}
+
+.backButtonWrapper {
+  margin-bottom: 8px;
+}
+
+// ИСПРАВЛЕНО: Вместо двух колонок grid теперь строгий вертикальный поток элементов (один под другим)
+.mainLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+// Контейнер, который выравнивает квадратную карточку фото строго по центру страницы
+.imageCenterContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.imageCard {
+  padding: 12px;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.02);
+  display: inline-block; // Позволяет карточке сжаться до размеров внутреннего квадрата
+}
+
+// Компактный квадрат (1:1) для фотографии автомобиля сверху
+.imageWrapper {
+  width: 320px;
+  height: 320px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #f1f5f9;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.02);
+  }
+
+  @media (max-width: 480px) {
+    width: 240px;
+    height: 240px;
+  }
+}
+
+.lazyImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+// Общие стили для контентных карточек (Инфо, Владелец, Отзывы)
+.infoCard, .bookingCard, .reviewsCard {
+  padding: 28px;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.03);
+  box-sizing: border-box;
+  width: 100%;
+
+  @media (max-width: 576px) {
+    padding: 20px;
+  }
+}
+// Технические характеристики
+.sectionTitle {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.specsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  font-size: 15px;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+.specItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f8fafc;
+}
+
+.specLabel {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.specValue {
+  color: #1e293b;
+  font-weight: 700;
+}
+
+// Блок бронирования и информации о владельце
+.carTitle {
+  margin: 0 0 12px 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+
+.ratingRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.stars {
+  color: #eab308;
+}
+
+.reviewsCount {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.priceRow {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.priceAmount {
+  font-size: 32px;
+  font-weight: 800;
+  color: #2563eb;
+}
+
+.pricePeriod {
+  color: #64748b;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.ownerBlock {
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ownerMeta {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.ownerName {
+  font-size: 16px;
+  color: #334155;
+}
+
+.actionWrapper {
+  width: 100%;
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 14px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  height: auto !important;
+}
+
+// Календарь забронированных дат
+.bookedDatesCalendar {
+  padding: 16px;
+  background: #fff5f5;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  border: 1px solid #ffe4e6;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.calendarTitle {
+  font-size: 12px;
+  color: #be123c;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.calendarList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.calendarActiveTrip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  color: #b91c1c;
+  background: rgba(185, 28, 28, 0.04);
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+.calendarBooked {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  color: #b45309;
+  background: rgba(180, 83, 9, 0.04);
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+// Системные уведомления ролей
+.myCarBadge, .adminBadge {
+  padding: 14px;
+  background: #f1f5f9;
+  border-radius: 12px;
+  text-align: center;
+  color: #475569;
+  font-weight: 700;
+  font-size: 13px;
+  border: 1px solid #e2e8f0;
+  letter-spacing: 0.5px;
+}
+
+.verificationWarningBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.warningMessage {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f43f5e;
+  text-align: center;
+  padding: 14px;
+  background: #fff5f5;
+  border-radius: 14px;
+  border: 1px solid #ffe4e6;
+  line-height: 1.5;
+}
+
+// ИСПРАВЛЕНО: Карточка отзывов находится в самом низу и имеет безопасный margin-bottom
+.reviewsCard {
+  margin-bottom: 40px; // ИСПРАВЛЕНО: Тот самый необходимый отступ вниз, чтобы контент не прилипал к краю экрана
+}
+
+.emptyReviews {
+  margin: 0;
+  color: #64748b;
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+// Сама лента отзывов теперь идет сплошным потоком без внутреннего скрытого скроллбара
+.reviewsList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.reviewItem {
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+
+.reviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.reviewAuthor {
+  font-size: 15px;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.reviewStars {
+  color: #eab308;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.reviewText {
+  margin: 0;
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.reviewDate {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+// Заглушка критической ошибки
+.errorPage {
+  text-align: center;
+  padding: 80px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.03);
+
+  h2 {
+    color: #0f172a;
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0;
+  }
+}

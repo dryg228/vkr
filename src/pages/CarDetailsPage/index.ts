@@ -1,0 +1,1 @@
+export { CarDetailsPage } from './CarDetailsPage';

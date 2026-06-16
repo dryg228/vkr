@@ -1,21 +1,21 @@
+@use '@/styles/globalColors' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
 .page {
-  padding: 40px 24px;
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  font-family: 'Inter', sans-serif;
-  background: #f8fafc;
-  min-height: calc(100vh - 120px);
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  gap: $spacing-2xl;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 40px;
+  background: #f8fafc;
   box-sizing: border-box;
-  overflow-x: hidden;
-  min-width: 0;
 
   @media (max-width: 768px) {
     padding: 24px 16px;
-    min-height: calc(100vh - 80px);
+    gap: 24px;
   }
 }
 
@@ -23,47 +23,27 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
-  gap: 16px;
+  margin-bottom: 24px;
   width: 100%;
 
-  @media (max-width: 576px) {
-    flex-direction: column;
-    align-items: flex-start;
-    
-    button, :global(.ui-button) {
-      width: 100%;
-    }
-  }
-
   .title {
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 800;
     color: #0f172a;
-    letter-spacing: -0.5px;
-
-    @media (max-width: 768px) {
-      font-size: 26px;
-    }
+    margin: 0;
   }
 }
 
+// Сетка карточек — теперь они будут красиво выстраиваться по 2 или 3 в ряд в зависимости от монитора
 .grid {
   display: grid;
-  // Контролируем, чтобы карточки не сжимались слишком сильно, а переносились на новые ряды
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+  grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); // Оптимальная ширина для горизонтальной карточки
   gap: 24px;
   width: 100%;
   box-sizing: border-box;
-  min-width: 0;
 
-  @media (max-width: 768px) {
-    gap: 20px;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  }
-  
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr; // На планшетах и мобилках перестраиваем в одну колонку
   }
 }
 
@@ -72,61 +52,56 @@
   border-radius: 24px;
   padding: 24px;
   border: 1px solid #f1f5f9;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.03);
   display: flex;
   flex-direction: column;
+  gap: 16px;
   box-sizing: border-box;
   width: 100%;
-  min-width: 0;
-
-  @media (max-width: 768px) {
-    padding: 20px;
-    border-radius: 20px;
-  }
-
-  &:hover {
-    @media (min-width: 769px) {
-      transform: translateY(-8px);
-      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
-      border-color: #e2e8f0;
-    }
-  }
 }
 
-// ДОБАВЛЕНО: Обертка содержимого карточки вместо инлайнового display: flex
+// Контейнер, разделяющий фото (слева) и текст (справа)
 .carContent {
   display: flex;
-  gap: 16px;
-  width: 100%;
-  box-sizing: border-box;
-  flex-wrap: wrap; // Автоматический перенос текста под картинку при нехватке ширины!
-
-  @media (max-width: 420px) {
-    flex-direction: column;
-  }
-}
-
-// ДОБАВЛЕНО: Безопасное адаптивное управление картинкой
-.carImage {
-  width: 120px;
-  height: 85px;
-  border-radius: 12px;
-  object-fit: cover;
-  flex-shrink: 0; // Защищает картинку от сплющивания
-
-  @media (max-width: 420px) {
-    width: 100%;
-    height: 140px;
-  }
-}
-
-.carHeader {
-  display: flex;
-  justify-content: space-between;
+  gap: 20px;
   align-items: flex-start;
-  margin-bottom: 12px;
+  width: 100%;
+  
+  @media (max-width: 480px) {
+    gap: 12px;
+  }
+}
+
+// Жёстко фиксируем размеры ленивой картинки, чтобы NoSQL Base64 не распирал её
+.carImage {
+  width: 140px;
+  height: 140px;
+  border-radius: 16px;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  flex-shrink: 0; // Запрещаем картинке сжиматься
+
+  @media (max-width: 480px) {
+    width: 100px;
+    height: 100px;
+  }
+}
+// Обертка для текстовой информации (марка, теги, цена)
+// КЛЮЧЕВОЙ ФИКС: flex: 1 и min-width: 0 раскрывают контейнер во всю доступную ширину
+.carInfoWrapper {
+  flex: 1;
+  min-width: 0; 
+  display: flex;
+  flex-direction: column;
   gap: 8px;
+}
+
+.carOriginalHeader {
+  display: flex;
+  flex-direction: column; // ИСПРАВЛЕНО: Элементы теперь выстраиваются строго вертикально друг под другом
+  align-items: flex-start; // Выравнивание по левому краю
+  gap: 6px; // Отступ между названием машины и блоком её статусов
   width: 100%;
 
   h3 {
@@ -134,23 +109,33 @@
     font-weight: 700;
     color: #0f172a;
     margin: 0;
-    white-space: normal;
-    word-wrap: break-word;
-    word-break: break-all;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
 
-    @media (max-width: 768px) {
-      font-size: 17px;
+    @media (max-width: 480px) {
+      font-size: 16px;
     }
   }
 }
 
+// Новый класс для строки с бейджами под названием машины
+.statusBadgesRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 2px;
+  margin-bottom: 4px; // Небольшой отступ перед списком характеристик (Бензин, Автомат и т.д.)
+}
+
+
 .carDetails {
   display: flex;
   gap: 6px;
-  margin-bottom: 16px;
   flex-wrap: wrap;
   align-items: center;
-  width: 100%;
+  margin: 4px 0;
 
   span {
     background: #f1f5f9;
@@ -164,77 +149,61 @@
 
 .location {
   font-size: 14px;
-  color: #94a3b8;
-  margin-top: auto;
-  margin-bottom: 14px;
+  color: #64748b;
+  margin: 4px 0;
   display: flex;
   align-items: center;
-  gap: 6px;
-  width: 100%;
-  
-  &::before {
-    content: "📍";
-    font-size: 12px;
-  }
+  gap: 4px;
 }
 
 .carPrice {
   font-size: 22px;
   font-weight: 800;
   color: #2563eb;
-  border-top: 1px solid #f1f5f9;
-  padding-top: 16px;
-  width: 100%;
+  margin-top: auto; // Прижимает цену к низу текстового блока
 
-  @media (max-width: 768px) {
-    font-size: 19px;
+  @media (max-width: 480px) {
+    font-size: 18px;
   }
 }
 
+// Блок нижних кнопок управления
 .carActions {
   display: flex;
   gap: 12px;
-  margin-top: 20px;
   border-top: 1px solid #f1f5f9;
-  padding-top: 20px;
+  padding-top: 16px;
   width: 100%;
-
-  @media (max-width: 480px) {
-    flex-direction: column;
-    gap: 8px;
-  }
+  box-sizing: border-box;
 
   button, :global(.ui-button) {
     flex: 1;
-    height: 42px;
-    border-radius: 10px;
+    height: 40px;
     font-weight: 600;
-    font-size: 14px;
-    width: 100%;
   }
 }
 
+// Стили формы добавления / модального окна
 .form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 8px 4px;
+  gap: 16px;
   width: 100%;
+  box-sizing: border-box;
+}
 
-  .inputWrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    width: 100%;
-  }
+.inputWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
 
-  .errorText {
-    color: #f43f5e;
-    font-size: 12px;
-    font-weight: 500;
-    margin-top: 2px;
-    animation: fadeIn 0.2s ease;
-  }
+.errorText {
+  color: #f43f5e;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 2px;
 }
 
 .formActions {
@@ -242,44 +211,13 @@
   justify-content: flex-end;
   gap: 12px;
   margin-top: 12px;
-  width: 100%;
-  
-  @media (max-width: 480px) {
-    flex-direction: column-reverse;
-    
-    button, :global(.ui-button) {
-      width: 100%;
-    }
-  }
-
-  button, :global(.ui-button) {
-    min-width: 120px;
-    height: 46px;
-    border-radius: 12px;
-    font-weight: 600;
-  }
 }
 
 .loading, .empty {
-  flex: 1; 
-  width: 100%; 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  padding: 60px 20px;
+  text-align: center;
+  padding: 48px;
   font-size: 16px;
   color: #64748b;
-  font-weight: 500;
-  background: #ffffff;
-  border-radius: 24px;
-  border: 1px solid #f1f5f9;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.02);
-  box-sizing: border-box; 
-  text-align: center;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  font-style: italic;
+  width: 100%;
 }

@@ -120,14 +120,8 @@ body {
   @include visually-hidden;
 }
 
-// ИСПРАВЛЕНО: Принудительно отцентрировали главный контейнер приложения по центру экрана
 .container {
   @include container;
-  margin-left: auto !important;
-  margin-right: auto !important;
-  width: 100%;
-  max-width: 1280px; 
-  box-sizing: border-box;
 }
 
 // ============================================
@@ -147,27 +141,52 @@ header[class*="header_"] div[class*="bottomBar_"] {
 }
 
 // ============================================
-// Принудительное устранение пустоты справа во всём приложении
+// НАДЁЖНЫЙ LAYOUT: ЕДИНЫЙ СКРОЛЛБАР И ЗАПОЛНЕНИЕ ЭКРАНА
 // ============================================
 
-// Находим главный контентный узел, куда рендерится CarsPage рядом с сайдбаром
-main, 
-.main, 
-[class*="main"], 
-[class*="content"], 
-[class*="pageContainer"] {
-  flex: 1 1 auto !important; // Заставляем блок занять 100% свободного места справа
-  width: 100% !important;
-  max-width: 100% !important;
+#root {
   display: flex !important;
   flex-direction: column !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  overflow: hidden !important; // Запрещаем прокрутку самого окна браузера
 }
 
-// Перебиваем возможные поломки во внешней обёртке приложения
-#root, 
-body > div:first-child {
+// Контейнер под хедером: Сайдбар (слева) + Рабочая область (справа)
+header + div,
+.mainLayout,
+[class*="mainLayout_"] {
   display: flex !important;
+  flex-direction: row !important; // Строго в один ряд
+  flex: 1 1 auto !important;
   width: 100vw !important;
-  max-width: 100% !important;
-  overflow-x: hidden !important;
+  height: calc(100vh - 64px) !important; // Высота экрана без верхнего хедера
+  overflow: hidden !important; 
+}
+
+// Главная рабочая область (справа от сайдбара), куда рендерится каталог и профиль
+main,
+.main,
+[class*="pageContainer_"],
+[class*="contentWrapper_"] {
+  flex: 1 1 0% !important; // Занимает ровно 100% оставшегося места справа до конца экрана
+  min-width: 0 !important;  // Защита от распирания сетки грида
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #f8fafc !important;
+  box-sizing: border-box !important;
+
+  // ВОЗВРАЩЕНО И НАСТРОЕНО: Нативный вертикальный скроллбар приложения живет только здесь!
+  overflow-y: auto !important; 
+  overflow-x: hidden !important; // Полностью исключает горизонтальный уезд вправо
+}
+
+// Убираем центрирование и зажимы ширины, чтобы контент плавно шёл до правого края
+.container {
+  width: 100% !important;
+  max-width: 100% !important; 
+  margin: 0 !important;
+  padding: 0 $spacing-lg !important;
+  box-sizing: border-box !important;
 }

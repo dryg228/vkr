@@ -2,17 +2,22 @@ import { useEffect, useState, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
 import { dataStore, authStore } from '@/store';
 import { Card, Button, Badge, Modal, Input, Select } from '@/components/UI';
+import { LocationDropdown } from '@/components/UI/LocationDropdown';
+import { LazyCarImage } from '@/components/LazyCarImage';
 import { Car, CarFormData, getCarStatusLabel, getFuelTypeLabel, getTransmissionLabel, formatCarName } from '@/types';
 import styles from './MyCarsPage.module.scss';
 
 export const MyCarsPage = observer(() => {
-  const { cars, activeLocations, createCar, updateCar, deleteCar, getLocationById, brandTemplates, loadBrandTemplates, templatesLoading } = dataStore;
+  const { cars, locations, createCar, updateCar, deleteCar, getLocationById, brandTemplates, loadBrandTemplates, templatesLoading } = dataStore;
   const { isAdmin, isAuthenticated, userId } = authStore;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCar, setEditingCar] = useState<Car | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formData, setFormData] = useState<CarFormData & { carImageUrl?: string; isVerified?: boolean }>({ brand: '', model: '', year: 2026, licensePlate: '', fuelType: 'petrol', transmission: 'automatic', seats: 5, pricePerDay: 2000, locationId: '', carImageUrl: '', isVerified: false });
+  const [formData, setFormData] = useState<CarFormData & { carImageUrl?: string; isVerified?: boolean; locationName?: string; city?: string }>({ 
+    brand: '', model: '', year: 2026, licensePlate: '', fuelType: 'petrol', 
+    transmission: 'automatic', seats: 5, pricePerDay: 2000, locationId: '', carImageUrl: '', isVerified: false, locationName: '', city: ''
+  });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
@@ -22,23 +27,21 @@ export const MyCarsPage = observer(() => {
 
   const brandKeys = Object.keys(brandTemplates || {});
   const finalBrandsList = brandKeys.length > 0 ? brandKeys : ['ВАЗ', 'Lada', 'Audi', 'BMW', 'Mercedes-Benz', 'Toyota', 'Kia', 'Hyundai', 'Tesla'];
-
-  // ИСПРАВЛЕНО: Корректная сортировка без дублирования .label.label
+  
   const allBrands = finalBrandsList
     .map(b => ({ value: b, id: b, label: b === 'ВАЗ' ? 'ВАЗ (Lada)' : b }))
     .sort((a, b) => a.label.localeCompare(b.label));
 
   useEffect(() => {
     if (allBrands.length > 0 && !formData.brand && !editingCar) {
-      // ИСПРАВЛЕНО: Берём дефолтное значение через индекс [0]
       const defBrand = allBrands[0]?.value || '';
       const t = brandTemplates[defBrand];
-      setFormData(p => ({
-        ...p, brand: defBrand, fuelType: t?.fuelType || 'petrol', transmission: t?.transmission || 'automatic',
-        seats: t?.seats || 5, pricePerDay: t?.pricePerDay || 2000, locationId: activeLocations[0]?.id || '', carImageUrl: '', isVerified: false
+      setFormData(p => ({ 
+        ...p, brand: defBrand, fuelType: t?.fuelType || 'petrol', transmission: t?.transmission || 'automatic', 
+        seats: t?.seats || 5, pricePerDay: t?.pricePerDay || 2000, locationId: '', carImageUrl: '', isVerified: false, locationName: '', city: ''
       }));
     }
-  }, [brandTemplates, activeLocations, editingCar, allBrands]);
+  }, [brandTemplates, editingCar, allBrands]);
 
   const handleBrandChange = (brand: string) => {
     const t = brandTemplates[brand];
@@ -58,49 +61,54 @@ export const MyCarsPage = observer(() => {
     }
   };
 
-  const myCars = cars.filter(c => c.isActive && (isAdmin || c.ownerId === userId));
+  const myCars = cars.filter(c => isAdmin || c.ownerId === userId);
 
   const handleOpenModal = (car?: Car) => {
     if (!isAuthenticated) return;
     setEditingCar(car || null);
-
-    // ИСПРАВЛЕНО: Поиск дефолтной марки через индекс [0]
+    
     const defBrand = allBrands[0]?.value || '';
     const t = brandTemplates[car?.brand || defBrand];
-
+    const currentLoc = car ? getLocationById(car.locationId) : null;
+    
     setFormData({
-      brand: car?.brand || defBrand,
-      model: car?.model || '',
-      year: car?.year || new Date().getFullYear(),
+      brand: car?.brand || defBrand, 
+      model: car?.model || '', 
+      year: car?.year || new Date().getFullYear(), 
       licensePlate: car?.licensePlate || '',
-      fuelType: (car?.fuelType || t?.fuelType || 'petrol') as any,
+      fuelType: (car?.fuelType || t?.fuelType || 'petrol') as any, 
       transmission: (car?.transmission || t?.transmission || 'automatic') as any,
-      seats: car?.seats || t?.seats || 5,
-      pricePerDay: car?.pricePerDay || t?.pricePerDay || 2000,
-      locationId: car?.locationId || activeLocations[0]?.id || '',
-      carImageUrl: (car as any)?.carImageUrl || '',
-      isVerified: (car as any)?.isVerified ?? false
+      seats: car?.seats || t?.seats || 5, 
+      pricePerDay: car?.pricePerDay || t?.pricePerDay || 2000, 
+      locationId: car?.locationId || '',
+      carImageUrl: '',
+      isVerified: (car as any)?.isVerified ?? false,
+      locationName: currentLoc ? currentLoc.name : '',
+      city: currentLoc ? currentLoc.city : ''
     });
 
-    setFilePreview((car as any)?.carImageUrl || null);
+    setFilePreview(null);
     setSelectedFile(null);
     setErrors({});
     setIsModalOpen(true);
   };
 
-  const upd = (key: keyof CarFormData | 'carImageUrl' | 'isVerified', val: any) => {
+  const upd = (key: string, val: any) => {
     setFormData(p => ({ ...p, [key]: val }));
     if (errors[key]) setErrors(p => ({ ...p, [key]: '' }));
   };
 
-    const handleSubmit = async () => {
+  const handleSubmit = async () => {
     const errs: Record<string, string> = {};
     const curYear = new Date().getFullYear();
 
     if (!formData.brand) errs.brand = 'Выберите марку.';
     if (!formData.model.trim()) errs.model = 'Укажите модель.';
     if (!formData.licensePlate.trim()) errs.licensePlate = 'Введите госномер.';
-    if (!formData.locationId) errs.locationId = 'Выберите локацию.';
+    
+    if (!(formData as any).locationName?.trim()) errs.locationId = 'Укажите адрес стоянки автомобиля.';
+    if (!(formData as any).city?.trim()) errs.city = 'Укажите город.';
+    
     if (!formData.year || formData.year < 1900 || formData.year > curYear) errs.year = `Год: 1900-${curYear}.`;
     if (!formData.pricePerDay || formData.pricePerDay <= 0) errs.pricePerDay = 'Цена должна быть > 0 ₽.';
     if (!selectedFile && !formData.carImageUrl) errs.carImageUrl = 'Загрузите фотографию автомобиля.';
@@ -138,46 +146,58 @@ export const MyCarsPage = observer(() => {
         <h1 className={styles.title}>{isAdmin ? 'Управление автомобилями (Админ)' : 'Мои автомобили'}</h1>
         {isAuthenticated && !isAdmin && <Button variant="primary" onClick={() => handleOpenModal()}>Добавить авто</Button>}
       </div>
-
-      {myCars.length === 0 ? <div className={styles.empty}>У вас пока нет автомобилей</div> : (
+      {myCars.length === 0 ? (
+        <div className={styles.empty}>У вас пока нет автомобилей</div>
+      ) : (
         <div className={styles.grid}>
           {myCars.map(car => (
             <Card key={car.id} className={styles.carCard}>
-              {/* ИСПРАВЛЕНО: Убран инлайновый стиль style={{display: 'flex'}}, заменен на класс */}
               <div className={styles.carContent}>
-                {(car as any).carImageUrl && (
-                  <img src={(car as any).carImageUrl} alt="Авто" className={styles.carImage} />
-                )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className={styles.carHeader}>
-                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-                      {formatCarName(car)}
-                      {!(car as any).isVerified && (
-                        <span style={{ fontSize: '10px', display: 'inline-flex' }}>
-                          <Badge variant="warning">На модерации</Badge>
-                        </span>
+                <LazyCarImage carId={car.id} alt="Авто" className={styles.carImage} />
+                
+                {/* ИСПРАВЛЕНО: Флекс-обертка текстовой информации для защиты от сжатия */}
+                <div className={styles.carInfoWrapper}>
+                  
+                  <div className={styles.carOriginalHeader}>
+                    <h3>{formatCarName(car)}</h3>
+                    
+                    <div className={styles.statusBadgesRow}>
+                      {/* Если машина не проверена администратором — показываем только "На модерации" */}
+                      {!(car as any).isVerified ? (
+                        <Badge variant="warning">На модерации</Badge>
+                      ) : (
+                        /* Если модерация успешно пройдена — показываем штатный статус доступности */
+                        <Badge variant={(car.status === 'available' ? 'success' : 'warning') as any}>
+                          {getCarStatusLabel(car.status)}
+                        </Badge>
                       )}
-                    </h3>
-                    <Badge variant={(car.status === 'available' ? 'success' : 'warning') as any}>{getCarStatusLabel(car.status)}</Badge>
+                    </div>
                   </div>
+
+
+
                   <div className={styles.carDetails}>
                     <span>{getFuelTypeLabel(car.fuelType)}</span>
                     <span>{getTransmissionLabel(car.transmission)}</span>
                     <span>{car.seats} мест</span>
                   </div>
-                  <p className={styles.location}>{getLocationById(car.locationId)?.name || 'Не указана'}</p>
+                  
+                  <p className={styles.location}>📍 {getLocationById(car.locationId)?.name || 'Не указана'}</p>
                   <div className={styles.carPrice}>{car.pricePerDay} ₽/день</div>
                 </div>
+
               </div>
+
               <div className={styles.carActions}>
                 <Button size="sm" variant="secondary" onClick={() => handleOpenModal(car)}>Редактировать</Button>
-                <Button size="sm" variant="danger" onClick={() => confirm('Удалить автомобиль?') && deleteCar(car.id)}>Удалить</Button>
+                <Button size="sm" variant="danger" onClick={() => window.confirm('Удалить автомобиль?') && deleteCar(car.id)}>Удалить</Button>
               </div>
             </Card>
           ))}
         </div>
       )}
 
+      {/* Модальное окно создания и редактирования ТС */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingCar ? 'Редактировать авто' : 'Добавить авто'}>
         <div className={styles.form}>
           <div className={styles.inputWrapper}>
@@ -192,7 +212,7 @@ export const MyCarsPage = observer(() => {
             { k: 'pricePerDay', l: 'Цена за день (₽)', t: 'number' }
           ].map(({ k, l, t }) => (
             <div key={k} className={styles.inputWrapper}>
-              <Input label={l} type={t} value={formData[k as keyof CarFormData]} onChange={(e) => upd(k as keyof CarFormData, t === 'number' ? parseInt(e.target.value) || 0 : e.target.value)} required />
+              <Input label={l} type={t} value={formData[k as keyof CarFormData]} onChange={(e) => upd(k, t === 'number' ? parseInt(e.target.value) || 0 : e.target.value)} required />
               {errors[k] && <span className={styles.errorText}>{errors[k]}</span>}
             </div>
           ))}
@@ -201,9 +221,15 @@ export const MyCarsPage = observer(() => {
           <Select label="Коробка передач" options={[{ value: 'manual', label: 'Механика' }, { value: 'automatic', label: 'Автомат' }]} value={formData.transmission} onChange={(e) => upd('transmission', e.target.value)} />
           <Input label="Количество мест" type="number" value={formData.seats} onChange={(e) => upd('seats', parseInt(e.target.value) || 0)} />
 
-          <div className={styles.inputWrapper}>
-            <Select label="Локация" options={activeLocations.map(l => ({ value: l.id, label: l.name }))} value={formData.locationId} onChange={(e) => upd('locationId', e.target.value)} required />
-            {errors.locationId && <span className={styles.errorText}>{errors.locationId}</span>}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px' }}>
+            <div className={styles.inputWrapper}>
+              <Input label="Город" placeholder="Сочи" value={(formData as any).city || ''} onChange={(e) => upd('city', e.target.value)} required />
+              {errors.city && <span className={styles.errorText}>{errors.city}</span>}
+            </div>
+            <div className={styles.inputWrapper}>
+              <Input label="Адрес стоянки авто" placeholder="ул. Ленина, д. 10" value={(formData as any).locationName || ''} onChange={(e) => upd('locationName', e.target.value)} required />
+              {errors.locationId && <span className={styles.errorText}>{errors.locationId}</span>}
+            </div>
           </div>
 
           <div className={styles.inputWrapper}>
@@ -222,7 +248,7 @@ export const MyCarsPage = observer(() => {
 
           <div className={styles.formActions}>
             <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Отмена</Button>
-            <Button variant="primary" onClick={handleSubmit}>{editingCar ? 'Сохранить' : 'Добавить'}</Button>
+            <Button variant="primary" onClick={handleSubmit}>Добавить</Button>
           </div>
         </div>
       </Modal>

@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { dataStore, authStore, navigationStore } from '@/store';
 import { Card, Button, Input, Select, Badge, Modal } from '@/components/UI';
+import { LocationDropdown } from '@/components/UI/LocationDropdown';
+import { LazyCarImage } from '@/components/LazyCarImage';
 import { formatCarName } from '@/types';
 import styles from './CarsPage.module.scss';
 
 export const CarsPage = observer(() => {
-  const { filteredCars, activeLocations, carsLoading, setFilter, getLocationById } = dataStore;
-  const { isAuthenticated, userId, isAdmin, user } = authStore; 
+  const { filteredCars, locations, carsLoading, setFilter, getLocationById } = dataStore;
+  const { userId } = authStore;
   const [searchValue, setSearchValue] = useState('');
 
   // Состояние для открытия полноразмерного превью фотографии авто
@@ -21,24 +23,20 @@ export const CarsPage = observer(() => {
   }, [searchValue]);
 
   const fuelOptions = [
-    { value: 'all', label: 'Все типы' }, { value: 'petrol', label: 'Бензин' }, 
+    { value: 'all', label: 'Все типы' }, { value: 'petrol', label: 'Бензин' },
     { value: 'diesel', label: 'Дизель' }, { value: 'electric', label: 'Электро' }, { value: 'hybrid', label: 'Гибрид' }
   ];
-  
+
   const transmissionOptions = [
     { value: 'all', label: 'Любая КПП' }, { value: 'manual', label: 'Механика' }, { value: 'automatic', label: 'Автомат' }
   ];
-  
-  const locationOptions = [
-    { value: 'all', label: 'Все локации' }, ...activeLocations.map(l => ({ value: l.id, label: l.name }))
-  ];
 
+  // СИНХРОНИЗИРОВАНО: Машина больше не исчезает во время поездок (убрано ограничение status === 'available')
   const displayCars = filteredCars.filter(car => {
-    const isAvailable = (car.isActive ?? true) && car.status === 'available';
     const isNotMine = (car as any).ownerId !== userId;
-    const isCarVerified = (car as any).isVerified === true; 
-    
-    return isAvailable && isNotMine && isCarVerified;
+    const isCarVerified = (car as any).isVerified === true;
+
+    return (car.isActive ?? true) && isNotMine && isCarVerified;
   });
 
   if (carsLoading) return <div className={styles.loading}>Загрузка каталога...</div>;
@@ -50,29 +48,64 @@ export const CarsPage = observer(() => {
       </div>
 
       <div className={styles.filters}>
-        <Input placeholder="Поиск по марке/модели..." value={searchValue} onChange={(e) => setSearchValue(e.target.value)} className={styles.searchInput} />
-        <Select options={locationOptions} value={dataStore.filters.locationId || 'all'} onChange={(e: any) => setFilter('locationId', e.target?.value === 'all' ? undefined : (e.target?.value ?? e))} />
-        <Select options={fuelOptions} value={dataStore.filters.fuelType || 'all'} onChange={(e: any) => setFilter('fuelType', e.target?.value === 'all' ? undefined : (e.target?.value ?? e))} />
-        <Select options={transmissionOptions} value={dataStore.filters.transmission || 'all'} onChange={(e: any) => setFilter('transmission', e.target?.value === 'all' ? undefined : (e.target?.value ?? e))} />
-      </div>
+        {/* Текстовый поиск */}
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Поиск автомобиля</label>
+          <Input 
+            placeholder="Поиск по марке/модели..." 
+            value={searchValue} 
+            onChange={(e) => setSearchValue(e.target.value)} 
+            className={styles.searchInput} 
+          />
+        </div>
 
+        {/* Выбор локации */}
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Выбор локации</label>
+          <div className={styles.locationWrapper}>
+            <LocationDropdown
+              locations={locations}
+              value={dataStore.filters.locationId || ''}
+              onChange={(val) => setFilter('locationId', val === '' ? undefined : val)}
+              placeholder="Все локации"
+            />
+          </div>
+        </div>
+
+        {/* Выбор типа двигателя */}
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Тип двигателя</label>
+          <Select 
+            options={fuelOptions} 
+            value={dataStore.filters.fuelType || 'all'} 
+            onChange={(e: any) => setFilter('fuelType', e.target?.value === 'all' ? undefined : (e.target?.value ?? e))} 
+          />
+        </div>
+
+        {/* Выбор коробки передач */}
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Коробка передач</label>
+          <Select 
+            options={transmissionOptions} 
+            value={dataStore.filters.transmission || 'all'} 
+            onChange={(e: any) => setFilter('transmission', e.target?.value === 'all' ? undefined : (e.target?.value ?? e))} 
+          />
+        </div>
+      </div>
       {displayCars.length === 0 ? (
         <div className={styles.empty}>Автомобили не найдены</div>
       ) : (
         <div className={styles.grid}>
           {displayCars.map(car => (
             <Card key={car.id} className={styles.carCard}>
-              {/* ОБНОВЛЕНО: Добавлен курсор pointer и событие клика для открытия большого фото */}
-              <div style={{ width: '100%', height: '180px', borderRadius: '16px', overflow: 'hidden', background: '#f8fafc', marginBottom: '16px', border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: (car as any).carImageUrl ? 'pointer' : 'default' }} onClick={() => (car as any).carImageUrl && setSelectedPreviewImage((car as any).carImageUrl)}>
-                {(car as any).carImageUrl ? (
-                  <img 
-                    src={(car as any).carImageUrl} 
-                    alt={formatCarName(car)} 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                  />
-                ) : (
-                  <span style={{ color: '#94a3b8', fontSize: '14px' }}>Фото отсутствует</span>
-                )}
+              <div
+                className={styles.imageContainer}
+                onClick={async () => {
+                  const img = await dataStore.loadCarImage(car.id);
+                  if (img) setSelectedPreviewImage(img);
+                }}
+              >
+                <LazyCarImage carId={car.id} alt={formatCarName(car)} className={styles.carImage} />
               </div>
 
               <div className={styles.carHeader}>
@@ -82,63 +115,72 @@ export const CarsPage = observer(() => {
                 </Badge>
               </div>
 
+              {/* Расчёт рейтинга звезд */}
+              {(() => {
+                const { rating, count } = dataStore.getCarRatingInfo(car.id);
+                return (
+                  <div className={styles.ratingBlock}>
+                    <span className={styles.ratingStars}>{rating > 0 ? `★ ${rating}` : '★ Нет оценок'}</span>
+                    {count > 0 && <span className={styles.ratingCount}>({count})</span>}
+                  </div>
+                );
+              })()}
+
               <div className={styles.carDetails}>
-                <span>{car.fuelType === 'petrol' ? 'Бензин' : car.fuelType === 'diesel' ? 'Дизель' : car.fuelType === 'electric' ? 'Электро' : 'Гибрид'}</span> | 
-                <span> {car.transmission === 'manual' ? 'Механика' : 'Автомат'}</span> | 
+                <span>{car.fuelType === 'petrol' ? 'Бензин' : car.fuelType === 'diesel' ? 'Дизель' : car.fuelType === 'electric' ? 'Электро' : 'Гибрид'}</span> |
+                <span> {car.transmission === 'manual' ? 'Механика' : 'Автомат'}</span> |
                 <span> {car.seats} мест</span>
               </div>
-              
-              <p className={styles.location} style={{ margin: '8px 0 4px 0' }}><strong>Локация:</strong> {getLocationById(car.locationId)?.name || 'Не указано'}</p>
-              
-              <p className={styles.owner} style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 12px 0' }}>
+
+              {/* ВСТАВЛЕНО: Список забронированных дней выводится здесь в чистых CSS-классах */}
+              {(() => {
+                const bookedDates = dataStore.getCarBookedDates(car.id);
+                if (bookedDates.length === 0) return null;
+                return (
+                  <div className={styles.bookedDatesBlock}>
+                    <strong className={styles.bookedDatesTitle}>Занятые даты:</strong>
+                    {bookedDates.map((p, idx) => (
+                      <div 
+                        key={idx} 
+                        className={p.status === 'active' ? styles.dateActiveTrip : styles.dateBooked}
+                      >
+                        {p.status === 'active' ? '● В поездке: ' : '○ Бронь: '} {p.start} — {p.end}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
+              <p className={styles.location}>📍 {getLocationById(car.locationId)?.name || 'Не указано'}</p>
+
+              <p className={styles.owner}>
                 <strong>Владелец:</strong> {(car as any).ownerName || (car as any).ownerId || 'Администратор'}
               </p>
 
               <div className={styles.carPrice}>{car.pricePerDay} ₽/день</div>
 
-              <div className={styles.carActions} style={{ marginTop: '16px' }}>
-                {isAdmin ? (
-                  <div style={{ textTransform: 'uppercase', fontSize: '12px', fontWeight: 700, color: '#64748b', textAlign: 'center', padding: '10px', background: '#f1f5f9', borderRadius: '12px' }}>
-                    Режим просмотра (Админ)
-                  </div>
-                ) : isAuthenticated && !(user as any)?.isVerified ? (
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#ef4444', textAlign: 'center', padding: '10px', background: '#fef2f2', borderRadius: '12px', border: '1px solid #fee2e2' }}>
-                    Подтвердите профиль (права) в личном кабинете
-                  </div>
-                ) : (
-                  <Button 
-                    variant="primary" 
-                    size="sm" 
-                    style={{ width: '100%' }}
-                    onClick={() => {
-                      if (!isAuthenticated) {
-                        authStore.openLoginModal();
-                      } else {
-                        dataStore.setSelectedCarForRental(car.id);
-                        navigationStore.navigate('rentals');
-                      }
-                    }}
-                  >
-                    Арендовать
-                  </Button>
-                )}
+              <div className={styles.carActions}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className={styles.actionBtn}
+                  onClick={() => {
+                    (dataStore as any).selectedCarId = car.id;
+                    navigationStore.navigate('car-details' as any);
+                  }}
+                >
+                  Подробнее
+                </Button>
               </div>
             </Card>
           ))}
         </div>
       )}
 
-      {/* ДОБАВЛЕНО: Модальное окно для просмотра полноразмерной фотографии автомобиля */}
       <Modal isOpen={!!selectedPreviewImage} onClose={() => setSelectedPreviewImage(null)} title="Просмотр автомобиля">
-        <div style={{ textAlign: 'center', padding: '10px' }}>
-          {selectedPreviewImage && (
-            <img 
-              src={selectedPreviewImage} 
-              alt="Автомобиль крупным планом" 
-              style={{ maxWidth: '100%', maxHeight: '70vh', borderRadius: '12px', border: '1px solid #e2e8f0', objectFit: 'contain' }} 
-            />
-          )}
-          <div style={{ marginTop: '20px' }}>
+        <div className={styles.modalContent}>
+          {selectedPreviewImage && <img src={selectedPreviewImage} alt="Авто" className={styles.modalImage} />}
+          <div className={styles.modalActions}>
             <Button variant="secondary" onClick={() => setSelectedPreviewImage(null)}>Закрыть</Button>
           </div>
         </div>
